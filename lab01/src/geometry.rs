@@ -61,7 +61,7 @@ impl Line2D {
     /// =0 if collinear
     /// >0 if counterclockwise
     fn ccw(p: Point2D, q: Point2D, r: Point2D) -> f64 {
-        (p.x * q.y - p.y * q.x) + (q.x * r.y - q.y * r.x) + (p.y * r.x - p.x - r.y)
+        (p.x * q.y - p.y * q.x) + (q.x * r.y - q.y * r.x) + (p.y * r.x - p.x * r.y)
     }
 }
 
@@ -112,6 +112,14 @@ mod tests {
     }
 
     #[test]
+    fn lines_dont_intersect2() {
+        let line1 = Line2D::new(0.0, 0.0, 1.0, 0.0);
+        let line2 = Line2D::new(0.0, 1.0, 1.0, 2.0);
+
+        assert!(!line1.intersects(line2))
+    }
+
+    #[test]
     fn lines_overlaps() {
         let line1 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
@@ -151,5 +159,4 @@ mod tests {
         };
         assert!(!line1.intersects(line2))
     }
-
 }
