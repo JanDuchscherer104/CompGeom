@@ -11,6 +11,13 @@ pub struct Line2D {
 }
 
 impl Line2D {
+    pub fn new(x1: f64, y1: f64, x2: f64, y2: f64) -> Self {
+        Line2D {
+            start: Point2D { x: x1, y: y1 },
+            end: Point2D { x: x2, y: y2 },
+        }
+    }
+
     pub fn intersects(&self, other: Line2D) -> bool {
         let ccw1 = Line2D::ccw(self.start, self.end, other.start);
         let ccw2 = Line2D::ccw(self.start, self.end, other.end);
