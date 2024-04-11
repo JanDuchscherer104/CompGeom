@@ -23,9 +23,18 @@ fn read_lines_from_file(file_name: &str) -> io::Result<Vec<Line2D>> {
             .map(|num| num.trim().parse().unwrap())
             .collect();
         if nums.len() == 4 {
-            let point1 = Point2D { x: nums[0], y: nums[1] };
-            let point2 = Point2D { x: nums[2], y: nums[3] };
-            let line = Line2D { start: point1, end: point2 };
+            let point1 = Point2D {
+                x: nums[0],
+                y: nums[1],
+            };
+            let point2 = Point2D {
+                x: nums[2],
+                y: nums[3],
+            };
+            let line = Line2D {
+                start: point1,
+                end: point2,
+            };
             lines.push(line);
         }
     }
