@@ -67,7 +67,21 @@ impl Line2D {
 
 #[cfg(test)]
 mod tests {
+    use geo::{Intersects, LineString};
+    use geo::line_string;
+
     use super::{Line2D, Point2D};
+
+    fn intersect_using_external_library(native_line1: Line2D, native_line2: Line2D) -> bool {
+        let geo_line1 = transform_to_geo_line(native_line1);
+        let geo_line2 = transform_to_geo_line(native_line2);
+
+        geo_line1.intersects(&geo_line2)
+    }
+
+    fn transform_to_geo_line(line: Line2D) -> LineString<f64> {
+        line_string![(x: line.start.x, y: line.start.y), (x: line.end.x, y: line.end.y)]
+    }
 
     #[test]
     fn lines_intersect_in_middle() {
@@ -83,6 +97,7 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
     #[test]
@@ -99,6 +114,7 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
     #[test]
@@ -115,6 +131,7 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(!result);
+        assert_eq!(line1.intersects(line2), intersect_using_external_library(line1, line2))
     }
 
     #[test]
@@ -125,6 +142,7 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
     #[test]
@@ -141,6 +159,8 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
     }
 
     #[test]
@@ -157,6 +177,7 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2));
     }
 
     #[test]
