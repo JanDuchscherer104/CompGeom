@@ -1,17 +1,13 @@
-pub mod utils;
+pub mod external_library;
 pub mod geometry;
 pub mod naive_intersect;
-pub mod external_library;
-use std::{
-    time::Instant,
-};
+pub mod utils;
+use std::time::Instant;
 
-use geometry::{Line2D, Point2D};
 use utils::read_lines_from_file;
 
+// use crate::external_library::get_intersections_external;
 use crate::naive_intersect::get_intersections;
-use crate::external_library::get_intersections_external;
-
 
 fn main() {
     let filenames = vec!["s_1000_1.dat", "s_10000_1.dat", "s_100000_1.dat"];
@@ -20,7 +16,7 @@ fn main() {
     for filename in filenames {
         let lines = read_lines_from_file(&format!(".data/{}", filename)).unwrap();
         let start_time = Instant::now();
-        let intersections = get_intersections_external(&lines);
+        let intersections = get_intersections(&lines);
         let duration = start_time.elapsed().as_millis();
         print_entry(
             lines.len().try_into().unwrap(),
