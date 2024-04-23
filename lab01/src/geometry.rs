@@ -30,8 +30,58 @@ impl Line2D {
         (dx * dx + dy * dy).sqrt()
     }
 
+    pub fn is_zero_length(&self) -> bool {
+        self.start.approx_eq(&self.end, f64::EPSILON)
+    }
+
+    pub fn contains(&self, point: Point2D) -> bool {
+        let dx = self.end.x - self.start.x;
+        let dy = self.end.y - self.start.y;
+    
+        // Handle the special case of a zero-length line (both dx and dy are zero)
+        if dx.abs() <= f64::EPSILON && dy.abs() <= f64::EPSILON {
+            return point.x == self.start.x && point.y == self.start.y;
+        }
+    
+        // Compute lambda for x and y coordinates, handling zero cases safely
+        let lambda_x = if dx.abs() > f64::EPSILON {
+            Some((point.x - self.start.x) / dx)
+        } else {
+            // dx is zero, check if point.x equals start.x (perfectly vertical line)
+            if point.x == self.start.x {
+                Some(0.0)
+            } else {
+                None
+            }
+        };
+    
+        let lambda_y = if dy.abs() > f64::EPSILON {
+            Some((point.y - self.start.y) / dy)
+        } else {
+            // dy is zero, check if point.y equals start.y (perfectly horizontal line)
+            if point.y == self.start.y {
+                Some(0.0)
+            } else {
+                None
+            }
+        };
+    
+        // Check if lambdas are defined and compare them if they are
+        match (lambda_x, lambda_y) {
+            (Some(lx), Some(ly)) if (lx - ly).abs() <= f64::EPSILON => {
+                // Both lambdas are approximately equal and within the segment range
+                lx >= 0.0 && lx <= 1.0 && ly >= 0.0 && ly <= 1.0
+            },
+            (Some(lx), None) => lx >= 0.0 && lx <= 1.0,  // Only lambda_x is valid (vertical line)
+            (None, Some(ly)) => ly >= 0.0 && ly <= 1.0,  // Only lambda_y is valid (horizontal line)
+            _ => false,  // Either lambda is None, or they don't match
+        }
+    }
+    
+
+
     pub fn intersects(&self, other: Line2D) -> bool {
-        // if self.get_length() == 0.0 && other.get_length() == 0.0 {
+        // if self.is_zero_length() && other.is_zero_length() {
         //     let res = self.start.approx_eq(&other.start, 1e-6);
         //     return res;
         // }
@@ -52,6 +102,13 @@ impl Line2D {
 
     /// Calculates whether two colinear lines overlap.
     fn parametric_overlap(&self, other: &Line2D) -> bool {
+        if self.is_zero_length(){
+            return other.contains(self.start);
+        } else if other.is_zero_length() {
+            return self.contains(other.start);
+        }
+        
+        // calculate direction. Take care if one line is a point
         let direction = Point2D {
             x: self.end.x - self.start.x,
             y: self.end.y - self.start.y,
