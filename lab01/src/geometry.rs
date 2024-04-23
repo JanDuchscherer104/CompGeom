@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,
@@ -10,7 +10,7 @@ impl Point2D {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Line2D {
     pub start: Point2D,
     pub end: Point2D,
@@ -79,6 +79,12 @@ impl Line2D {
     /// >0 if counterclockwise
     fn ccw(p: Point2D, q: Point2D, r: Point2D) -> f64 {
         (p.x * q.y - p.y * q.x) + (q.x * r.y - q.y * r.x) + (p.y * r.x - p.x * r.y)
+    }
+}
+
+impl PartialEq for Line2D {
+    fn eq(&self, other: &Self) -> bool {
+        self.start.approx_eq(&other.start, 1e-6) && self.end.approx_eq(&other.end, 1e-6)
     }
 }
 
@@ -254,6 +260,17 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn collinear_lines_start_and_end_on_same_point() {
+        let line1 = Line2D::new(0.0, 0.0, 1.0, 0.0);
+        let line2 = Line2D::new(1.0, 0.0, 2.0, 0.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
         assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
