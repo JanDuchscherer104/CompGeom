@@ -161,6 +161,27 @@ mod tests {
         assert!(result);
         assert_eq!(result, intersect_using_external_library(line1, line2))
     }
+
+    #[test]
+    fn vertical_lines_overlap() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 1.0);
+        let line2 = Line2D::new(0.0, 0.5, 0.0, 2.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn diagonal_lines_overlap() {
+        let line1 = Line2D::new(0.0, 0.0, 1.0, 1.0);
+        let line2 = Line2D::new(0.5, 0.5, 2.0, 2.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
     #[test]
@@ -190,6 +211,55 @@ mod tests {
             start: Point2D { x: 0.0, y: 1.0 },
             end: Point2D { x: 1.0, y: 1.0 },
         };
-        assert!(!line1.intersects(line2))
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
     }
+
+    #[test]
+    fn identical_lines() {
+        let line1 = Line2D::new(0.0, 0.0, 1.0, 1.0);
+        let line2 = Line2D::new(0.0, 0.0, 1.0, 1.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn collinear_lines() {
+        let line1 = Line2D::new(0.0, 0.0, 1.0, 1.0);
+        let line2 = Line2D::new(1.5, 1.5, 2.5, 2.5);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn lines_with_zero_length_on_same_point() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+        let line2 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn lines_with_zero_length_on_different_points() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+        let line2 = Line2D::new(1.0, 1.0, 1.0, 1.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
 }
