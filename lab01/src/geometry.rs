@@ -319,4 +319,15 @@ mod tests {
         assert_eq!(result, intersect_using_external_library(line1, line2))
     }
 
+    #[test]
+    fn zero_length_on_line() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+        let line2 = Line2D::new(0.0, 0.0, 1.0, 1.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
 }
