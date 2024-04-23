@@ -71,44 +71,50 @@ mod tests {
 
     #[test]
     fn lines_intersect_in_middle() {
-        let horizontal = Line2D {
+        let line1 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
             end: Point2D { x: 2.0, y: 0.0 },
         };
-        let vertical = Line2D {
+        let line2 = Line2D {
             start: Point2D { x: 1.0, y: 0.0 },
             end: Point2D { x: 1.0, y: 2.0 },
         };
 
-        assert!(horizontal.intersects(vertical))
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
     }
 
     #[test]
     fn lines_touch_at_edge() {
-        let horizontal = Line2D {
+        let line1 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
             end: Point2D { x: 2.0, y: 0.0 },
         };
-        let vertical = Line2D {
+        let line2 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
             end: Point2D { x: 0.0, y: 2.0 },
         };
 
-        assert!(horizontal.intersects(vertical))
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
     }
 
     #[test]
     fn lines_dont_intersect() {
-        let horizontal = Line2D {
+        let line1 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
             end: Point2D { x: 1.0, y: 0.5 },
         };
-        let vertical = Line2D {
+        let line2 = Line2D {
             start: Point2D { x: 1.0, y: 2.0 },
             end: Point2D { x: 2.0, y: 1.5 },
         };
 
-        assert!(!horizontal.intersects(vertical))
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
     }
 
     #[test]
@@ -116,11 +122,13 @@ mod tests {
         let line1 = Line2D::new(0.0, 0.0, 1.0, 0.0);
         let line2 = Line2D::new(0.0, 1.0, 1.0, 2.0);
 
-        assert!(!line1.intersects(line2))
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
     }
 
     #[test]
-    fn lines_overlaps() {
+    fn horizontal_lines_overlap() {
         let line1 = Line2D {
             start: Point2D { x: 0.0, y: 0.0 },
             end: Point2D { x: 1.0, y: 0.0 },
@@ -130,7 +138,9 @@ mod tests {
             end: Point2D { x: 2.0, y: 0.0 },
         };
 
-        assert!(line1.intersects(line2))
+        let result: bool = line1.intersects(line2);
+
+        assert!(result);
     }
 
     #[test]
@@ -144,7 +154,9 @@ mod tests {
             end: Point2D { x: 3.0, y: 0.0 },
         };
 
-        assert!(!line1.intersects(line2))
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
     }
 
     #[test]
