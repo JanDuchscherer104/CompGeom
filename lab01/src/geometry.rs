@@ -31,10 +31,10 @@ impl Line2D {
     }
 
     pub fn intersects(&self, other: Line2D) -> bool {
-        if self.get_length() == 0.0 && other.get_length() == 0.0 {
-            let res = self.start.approx_eq(&other.start, 1e-6);
-            return res;
-        }
+        // if self.get_length() == 0.0 && other.get_length() == 0.0 {
+        //     let res = self.start.approx_eq(&other.start, 1e-6);
+        //     return res;
+        // }
 
         let ccw1 = Line2D::ccw(self.start, self.end, other.start);
         let ccw2 = Line2D::ccw(self.start, self.end, other.end);
@@ -289,6 +289,29 @@ mod tests {
     fn lines_with_zero_length_on_different_points() {
         let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
         let line2 = Line2D::new(1.0, 1.0, 1.0, 1.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn zero_length_and_non_zero_length_that_dont_intersect() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+        let line2 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn zero_length_and_non_zero_length_that_dont_intersect_2() {
+        // bug from file s_1000_1.dat that was indicating a wrong intersection
+        let line1 = Line2D::new(10.0, 10.0, 10.0, 10.0);
+        let line2 = Line2D::new(31.498, 9.526, 31.8858, 10.3111);
 
         let result: bool = line1.intersects(line2);
 
