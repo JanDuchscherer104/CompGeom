@@ -4,6 +4,12 @@ pub struct Point2D {
     pub y: f64,
 }
 
+impl Point2D {
+    pub fn approx_eq(&self, other: &Self, epsilon: f64) -> bool {
+        (self.x - other.x).abs() < epsilon && (other.x - other.y).abs() < epsilon
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Line2D {
     pub start: Point2D,
@@ -18,7 +24,18 @@ impl Line2D {
         }
     }
 
+    pub fn get_length(&self) -> f64 {
+        let dx = self.end.x - self.start.x;
+        let dy = self.end.y - self.start.y;
+        (dx * dx + dy * dy).sqrt()
+    }
+
     pub fn intersects(&self, other: Line2D) -> bool {
+        if self.get_length() == 0.0 && other.get_length() == 0.0 {
+            let res = self.start.approx_eq(&other.start, 1e-6);
+            return res;
+        }
+
         let ccw1 = Line2D::ccw(self.start, self.end, other.start);
         let ccw2 = Line2D::ccw(self.start, self.end, other.end);
         let ccw3 = Line2D::ccw(other.start, other.end, self.start);
