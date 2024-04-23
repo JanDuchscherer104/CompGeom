@@ -7,3 +7,12 @@ In dem Tar-File 'strecken.tgz' (s.u.) befinden sich Dateien mit jeweils 4 Koordi
 | 1001       | 12               | 14            |
 | 10001      | 773              | 1550          |
 | 100001     | 77557            | 157158        |
+
+### Extenal Library (geo)
+The external library [geo](https://crates.io/crates/geo) is used to compare the results.
+It yields the following results:
+| # Lines    | # Intersections  | Duration (ms) |
+|------------|------------------|---------------|
+| 1001       | 11               | 105           |
+| 10001      | 733              | 10425         |
+| 100001     | 77138            | 1058787       |;
