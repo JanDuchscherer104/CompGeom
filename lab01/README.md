@@ -16,3 +16,16 @@ It yields the following results:
 | 1001       | 11               | 105           |
 | 10001      | 733              | 10425         |
 | 100001     | 77138            | 1058787       |
+
+## Justification
+### Algorithm
+- Simple but reliable Brute-force approach to compare all pairs of lines
+- For each pair of lines, the intersection is calculated
+
+### Tests
+- Tests covering many edge cases
+- Tests are comparing the results with the well-established library [geo](https://crates.io/crates/geo)
+
+### Weaknesses
+- The algorithm is not optimal and has a time complexity of O(n^2)
+- Floating point arithmetic can lead to errors  
