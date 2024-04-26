@@ -1,6 +1,7 @@
-use crate::polygone::Polygone;
+use crate::polygon::Polygon;
+
 
 pub struct State {
-    name: String,
-    polygones: Vec<Polygone>,
+    pub name: String,
+    pub polygons: Vec<Polygon>,
 }
