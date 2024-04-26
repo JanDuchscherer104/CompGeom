@@ -42,7 +42,7 @@ fn test_parse_file_into_country_should_parse_relative_path_correctly() {
     // l -100, 0
     // l 0, -100
     // z
-    let mut expected = vec![
+    let expected = vec![
         Point2D::new(0.0, 0.0),
         Point2D::new(100.0, 0.0),
         Point2D::new(100.0, 100.0),
@@ -74,7 +74,7 @@ fn test_parse_file_into_country_should_parse_absolute_path_correctly() {
     // L 100, 300
     // l 0, 300
     // z
-    let mut expected = vec![
+    let expected = vec![
         Point2D::new(0.0, 300.0),
         Point2D::new(0.0, 400.0),
         Point2D::new(100.0, 400.0),
@@ -114,14 +114,14 @@ fn test_parse_file_into_country_should_parse_multiple_polygons_correctly() {
     // l -50, 0
     // l 0, -50
     // z
-    let mut expected0 = vec![
+    let expected0 = vec![
         Point2D::new(200.0, 0.0),
         Point2D::new(300.0, 100.0),
         Point2D::new(400.0, 100.0),
         Point2D::new(300.0, 200.0),
         Point2D::new(200.0, 200.0),
     ];
-    let mut expected1 = vec![
+    let expected1 = vec![
         Point2D::new(300.0, 0.0),
         Point2D::new(350.0, 0.0),
         Point2D::new(350.0, 50.0),
