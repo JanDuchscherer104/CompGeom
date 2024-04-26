@@ -41,18 +41,18 @@ z
 <path
    sodipodi:type="arc"
    style="fill:#ff0000;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-   id="München"
-   sodipodi:cx="366.9678"
-   sodipodi:cy="700"
+   id="City0"
+   sodipodi:cx="50"
+   sodipodi:cy="50"
    sodipodi:rx="3"
    sodipodi:ry="3"
 />
 <path
    sodipodi:type="arc"
    style="fill:#ff0000;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-   id="Berlin"
-   sodipodi:cx="477"
-   sodipodi:cy="256"
+   id="City1"
+   sodipodi:cx="250"
+   sodipodi:cy="150"
    sodipodi:rx="3"
    sodipodi:ry="3"
 />

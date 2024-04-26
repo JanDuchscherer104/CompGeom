@@ -6,11 +6,12 @@ use svg::{
     parser::Event,
 };
 
-use crate::{point::Point2D, polygon::Polygon, state::State};
+use crate::{city::City, country::Country, point::Point2D, polygon::Polygon, state::State};
 
-pub fn parse_file_into_states(path: String) -> Vec<State> {
+pub fn parse_file_into_country(path: String) -> Country {
     let mut content = String::new();
     let mut states: Vec<State> = Vec::new();
+    let mut cities: Vec<City> = Vec::new();
 
     // the first group contains the states, the second group contains the cities.
     let mut is_state_group = true;
@@ -24,6 +25,8 @@ pub fn parse_file_into_states(path: String) -> Vec<State> {
                 if name == "path" {
                     if is_state_group {
                         states.push(parse_path_to_state(attributes));
+                    } else {
+                        cities.push(parse_path_to_city(attributes));
                     }
                 }
             }
@@ -31,7 +34,10 @@ pub fn parse_file_into_states(path: String) -> Vec<State> {
         }
     }
 
-    states
+    Country {
+        states: states,
+        cities: cities,
+    }
 }
 
 fn parse_path_to_state(attributes: std::collections::HashMap<String, svg::node::Value>) -> State {
@@ -85,5 +91,15 @@ fn parse_path_to_state(attributes: std::collections::HashMap<String, svg::node::
     State {
         name: name,
         polygons: polygons,
+    }
+}
+
+fn parse_path_to_city(attributes: std::collections::HashMap<String, svg::node::Value>) -> City {
+    City {
+        name: attributes.get("id").unwrap().to_string(),
+        location: Point2D::new(
+            attributes.get("sodipodi:cx").unwrap().parse().unwrap(),
+            attributes.get("sodipodi:cy").unwrap().parse().unwrap(),
+        ),
     }
 }

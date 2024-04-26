@@ -1,17 +1,17 @@
-use lab02::{point::Point2D, svg_parser::parse_file_into_states};
+use lab02::{point::Point2D, svg_parser::parse_file_into_country};
 
 #[test]
-fn test_parse_file_into_states_should_return_a_vector_of_states() {
+fn test_parse_file_into_country_should_return_a_vector_of_states() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     assert_eq!(states.len(), 3);
 }
 
 #[test]
-fn test_parse_file_into_states_should_return_a_vector_of_states_with_correct_names() {
+fn test_parse_file_into_country_should_return_a_vector_of_states_with_correct_names() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     assert_eq!(states[0].name, "RelativePath");
     assert_eq!(states[1].name, "AbsolutePath");
@@ -19,9 +19,9 @@ fn test_parse_file_into_states_should_return_a_vector_of_states_with_correct_nam
 }
 
 #[test]
-fn test_parse_file_into_states_should_return_states_with_correct_polygons() {
+fn test_parse_file_into_country_should_return_states_with_correct_polygons() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     assert_eq!(states[0].polygons.len(), 1);
     assert_eq!(states[1].polygons.len(), 1);
@@ -29,9 +29,9 @@ fn test_parse_file_into_states_should_return_states_with_correct_polygons() {
 }
 
 #[test]
-fn test_parse_file_into_states_should_parse_relative_path_correctly() {
+fn test_parse_file_into_country_should_parse_relative_path_correctly() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     let state = &states[0];
     let polygon = &state.polygons[0];
@@ -61,9 +61,9 @@ fn test_parse_file_into_states_should_parse_relative_path_correctly() {
 }
 
 #[test]
-fn test_parse_file_into_states_should_parse_absolute_path_correctly() {
+fn test_parse_file_into_country_should_parse_absolute_path_correctly() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     let state = &states[1];
     let polygon = &state.polygons[0];
@@ -93,9 +93,9 @@ fn test_parse_file_into_states_should_parse_absolute_path_correctly() {
 }
 
 #[test]
-fn test_parse_file_into_states_should_parse_multiple_polygons_correctly() {
+fn test_parse_file_into_country_should_parse_multiple_polygons_correctly() {
     let path = String::from("tests/test.svg");
-    let states = parse_file_into_states(path);
+    let states = parse_file_into_country(path).states;
 
     let state = &states[2];
     let polygon0 = &state.polygons[0];
@@ -146,4 +146,18 @@ fn test_parse_file_into_states_should_parse_multiple_polygons_correctly() {
             expected1[i]
         );
     }
+}
+
+#[test]
+fn test_parse_file_into_country_should_return_cities() {
+    let path = String::from("tests/test.svg");
+    let cities = parse_file_into_country(path).cities;
+
+    assert_eq!(cities.len(), 2);
+    
+    assert_eq!(cities[0].name, "City0");
+    assert!(cities[0].location.approx_eq(&Point2D::new(50.0, 50.0)));
+    assert_eq!(cities[1].name, "City1");
+    assert!(cities[1].location.approx_eq(&Point2D::new(250.0, 150.0)));
+
 }
