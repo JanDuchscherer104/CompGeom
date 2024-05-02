@@ -6,7 +6,7 @@ use svg::{
     parser::Event,
 };
 
-use crate::{city::City, country::Country, point::Point2D, polygon::Polygon, state::State};
+use crate::{city::City, country::Country, geometry::{point::Point2D, polygon::Polygon}, state::State};
 
 pub fn parse_file_into_country(path: String) -> Country {
     let mut content = String::new();

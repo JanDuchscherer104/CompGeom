@@ -1,4 +1,5 @@
-use crate::point::Point2D;
+use super::point::Point2D;
+
 
 pub struct Polygon {
     pub points: Vec<Point2D>,

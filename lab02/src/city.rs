@@ -1,4 +1,5 @@
-use crate::point::Point2D;
+use crate::geometry::point::Point2D;
+
 
 pub struct City {
     pub name: String,

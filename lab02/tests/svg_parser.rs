@@ -1,4 +1,4 @@
-use lab02::{point::Point2D, svg_parser::parse_file_into_country};
+use lab02::{geometry::point::Point2D, svg_parser::parse_file_into_country};
 
 #[test]
 fn test_parse_file_into_country_should_return_a_vector_of_states() {

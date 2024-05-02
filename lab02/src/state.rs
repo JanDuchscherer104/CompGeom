@@ -1,5 +1,4 @@
-use crate::polygon::Polygon;
-
+use crate::geometry::polygon::Polygon;
 
 pub struct State {
     pub name: String,
