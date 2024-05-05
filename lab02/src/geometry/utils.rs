@@ -4,6 +4,16 @@ pub fn ccw(p: Point2D, q: Point2D, r: Point2D) -> f64 {
     (p.x * q.y - p.y * q.x) + (q.x * r.y - q.y * r.x) + (p.y * r.x - p.x * r.y)
 }
 
+pub fn sign(x: f64) -> i32 {
+    if x > 0.0 {
+        1
+    } else if x < 0.0 {
+        -1
+    } else {
+        0
+    }
+}
+
 mod tests {
     use super::*;
 
