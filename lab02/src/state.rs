@@ -10,7 +10,7 @@ impl State {
         self.polygons.iter().map(|polygon| polygon.get_area()).sum()
     }
 
-    pub fn contains(&self, city: City) -> bool {
+    pub fn contains(&self, city: &City) -> bool {
         self.polygons.iter().any(|polygon| polygon.contains(city.location))
     }
 }
@@ -70,7 +70,7 @@ mod tests {
             name: "City".to_string(),
             location: Point2D::new(0.5, 0.5),};
 
-        assert!(state.contains(city));
+        assert!(state.contains(&city));
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
             location: Point2D::new(2.5, 2.5),
         };
 
-        assert!(state.contains(city));
+        assert!(state.contains(&city));
     }
 
     #[test]
@@ -120,7 +120,7 @@ mod tests {
             location: Point2D::new(4.0, 4.0),
         };
 
-        assert!(!state.contains(city));
+        assert!(!state.contains(&city));
     }
 
     #[test]
@@ -135,7 +135,7 @@ mod tests {
             location: Point2D::new(4.0, 4.0),
         };
 
-        assert!(!state.contains(city));
+        assert!(!state.contains(&city));
     }
 
 }
