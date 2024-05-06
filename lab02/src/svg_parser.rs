@@ -91,6 +91,7 @@ fn parse_path_to_state(attributes: std::collections::HashMap<String, svg::node::
     State {
         name: name,
         polygons: polygons,
+        holes: vec![],
     }
 }
 
