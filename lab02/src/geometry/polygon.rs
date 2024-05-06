@@ -103,6 +103,21 @@ impl Polygon {
 
         (Point2D::new(min_x, min_y), Point2D::new(max_x, max_y))
     }
+
+    /// Check if the polygon is clockwise.
+    /// It should also work for non-simple polygons.
+    /// The algorithm is from the following stackoverflow post.
+    /// https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+    pub fn is_clockwise(&self) -> bool {
+        let mut sum = 0.0;
+ 
+        for i in 0..self.points.len() {
+            let j = (i + 1) % self.points.len();
+            sum += (self.points[j].x - self.points[i].x) * (self.points[j].y + self.points[i].y);
+        }
+
+        sum > 0.0
+    }
 }
 
 mod tests {
@@ -175,6 +190,34 @@ mod tests {
 
         let area = polygon.get_area();
         let expected = 8.0;
+
+        assert!((area - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn get_area_should_return_correct_value_when_polygon_is_cw() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+
+        let area = polygon.get_area();
+        let expected = 16.0;
+
+        assert!((area - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn get_area_should_return_correct_value_when_polygon_is_ccw() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+
+        let area = polygon.get_area();
+        let expected = 16.0;
 
         assert!((area - expected).abs() < f64::EPSILON);
     }
@@ -265,4 +308,72 @@ mod tests {
         assert!(!polygon.contains(point));
     }
 
+    #[test]
+    fn is_clockwise_should_return_true_when_polygon_is_cw() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+
+        assert!(polygon.is_clockwise());
+    }
+
+    #[test]
+    fn is_clockwise_should_return_false_when_polygon_is_ccw() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+
+        assert!(!polygon.is_clockwise());
+    }
+
+    #[test]
+    fn is_clockwise_should_return_true_when_polygon_is_cw_and_has_negative_coordinates() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(-1.0, -1.0));
+        polygon.add_point(Point2D::new(-1.0, -5.0));
+        polygon.add_point(Point2D::new(-5.0, -5.0));
+        polygon.add_point(Point2D::new(-5.0, -1.0));
+
+        assert!(polygon.is_clockwise());
+    }
+
+    #[test]
+    fn is_clockwise_should_return_false_when_polygon_is_ccw_and_has_negative_coordinates() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(-1.0, -1.0));
+        polygon.add_point(Point2D::new(-5.0, -1.0));
+        polygon.add_point(Point2D::new(-5.0, -5.0));
+        polygon.add_point(Point2D::new(-1.0, -5.0));
+
+        assert!(!polygon.is_clockwise());
+    }
+
+    #[test]
+    fn is_clockwise_should_return_false_when_polygon_is_ccw_and_concave() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(2.0, 2.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+    
+        assert!(!polygon.is_clockwise());
+    }
+
+    #[test]
+    fn is_clockwise_should_return_true_when_polygon_is_cw_and_concave() {
+        let mut polygon = Polygon::new();
+        polygon.add_point(Point2D::new(0.0, 0.0));
+        polygon.add_point(Point2D::new(0.0, 4.0));
+        polygon.add_point(Point2D::new(4.0, 4.0));
+        polygon.add_point(Point2D::new(2.0, 2.0));
+        polygon.add_point(Point2D::new(4.0, 0.0));
+    
+        assert!(polygon.is_clockwise());
+    }
+        
 }
