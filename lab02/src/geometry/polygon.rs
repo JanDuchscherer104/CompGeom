@@ -1,6 +1,7 @@
 use super::point::Point2D;
 use super::utils::{ccw, sign};
 
+#[derive(Clone, Debug)]
 pub struct Polygon {
     pub points: Vec<Point2D>,
 }
@@ -118,6 +119,13 @@ impl Polygon {
 
         sum > 0.0
     }
+
+    /// Determines whether the polygon is nested inside another polygon.
+    /// Returns true if a single point is within another polygon.
+    pub fn is_nested(&self, outer: &Polygon) -> bool {
+        self.points.iter().any(|p| outer.contains(*p))
+    }
+
 }
 
 mod tests {

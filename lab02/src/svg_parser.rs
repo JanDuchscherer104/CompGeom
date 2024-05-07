@@ -42,7 +42,7 @@ pub fn parse_file_into_country(path: String) -> Country {
 
 fn parse_path_to_state(attributes: std::collections::HashMap<String, svg::node::Value>) -> State {
     let name = attributes.get("id").unwrap().to_string();
-    let mut polygons = Vec::new();
+    let mut polygons: Vec<Polygon> = Vec::new();
 
     let data = attributes.get("d").unwrap();
     let data = Data::parse(data).unwrap();
@@ -88,11 +88,48 @@ fn parse_path_to_state(attributes: std::collections::HashMap<String, svg::node::
         }
     }
 
+    // split into polygons and holes
+    // svg uses fill-rule: nonzero by default.
+    // determining by the direction of the polygon is a oversimplification, but it works for the given data.ss
+    let (shell, holes) = categorize_polygons(polygons);
+    
     State {
         name: name,
-        polygons: polygons,
-        holes: vec![],
+        polygons: shell,
+        holes: holes,
     }
+}
+
+/// Simplified algorithm to categorize whether a polygon is a shell or a hole.
+/// Assumptions:
+/// - first polygon is a shell
+/// - Polygons#is_nested() considers the whole polygon as nested as soon as a single point is inside.
+fn categorize_polygons(polygons: Vec<Polygon>) -> (Vec<Polygon>, Vec<Polygon>) {
+    let mut holes = Vec::new();
+    let mut shells = Vec::new();
+
+    if !polygons.is_empty() {
+        shells.push(polygons[0].clone());
+    }
+
+    for i in 1..polygons.len() {
+        let mut is_hole = false;
+
+        for shell in &shells {
+            if polygons[i].is_nested(shell) {
+                is_hole = true;
+                break;
+            }
+        }
+
+        if is_hole {
+            holes.push(polygons[i].clone());
+        } else {
+            shells.push(polygons[i].clone());
+        }
+    }
+
+    (shells, holes)
 }
 
 fn parse_path_to_city(attributes: std::collections::HashMap<String, svg::node::Value>) -> City {
