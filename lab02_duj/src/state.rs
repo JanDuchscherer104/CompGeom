@@ -18,6 +18,7 @@ pub struct State {
     pub name: String,
     pub regions: Vec<RegionType>,
     pub capital: Option<City>,
+    pub area: Option<f64>,
 }
 
 impl State {
@@ -26,6 +27,7 @@ impl State {
             name,
             regions,
             capital: None,
+            area: None,
         }
     }
 
@@ -82,14 +84,17 @@ impl State {
         Ok(State::new(name, classified_regions))
     }
 
-    pub fn area(&self) -> f64 {
-        self.regions
+    pub fn compute_area(&mut self) -> f64 {
+        let area = self
+            .regions
             .iter()
             .map(|region| match region {
                 RegionType::OuterBoundary(polygon) => polygon.area(),
                 RegionType::ExclusionZone(polygon) => -polygon.area(),
             })
-            .sum()
+            .sum();
+        self.area = Some(area);
+        area
     }
 
     pub fn contains(&self, city: &City) -> bool {
@@ -104,5 +109,15 @@ impl State {
         });
 
         in_outer_boundary && !in_exclusion_zone
+    }
+
+    pub fn scale(&mut self, width_ratio: f64, height_ratio: f64) {
+        for region in &mut self.regions {
+            match region {
+                RegionType::OuterBoundary(polygon) | RegionType::ExclusionZone(polygon) => {
+                    polygon.scale(width_ratio, height_ratio)
+                }
+            }
+        }
     }
 }

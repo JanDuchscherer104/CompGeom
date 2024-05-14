@@ -26,4 +26,9 @@ impl City {
             ),
         })
     }
+
+    pub fn scale(&mut self, width_scale: f64, height_scale: f64) {
+        self.location.x *= width_scale;
+        self.location.y *= height_scale;
+    }
 }

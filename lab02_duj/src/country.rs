@@ -9,16 +9,20 @@ use std::path;
 #[derive(Clone, Debug)]
 pub struct Country {
     pub name: Option<String>,
+    pub area: Option<f64>,
     pub states: Vec<State>,
     pub cities: Vec<City>,
+    pub svg_dims: Option<(f64, f64)>, // (width, height) in pixels
 }
 
 impl Country {
     pub fn new() -> Self {
         Self {
             name: None,
+            area: None,
             states: Vec::new(),
             cities: Vec::new(),
+            svg_dims: None,
         }
     }
 
@@ -42,6 +46,9 @@ impl Country {
                         let id = format!("{}", id);
                         println!("Country name: {}", &id);
                         country.name = Some(id);
+                        let width = attributes.get("width").unwrap().parse::<f64>().unwrap();
+                        let height = attributes.get("height").unwrap().parse::<f64>().unwrap();
+                        country.svg_dims = Some((width, height));
                     }
                     // let name = attributes.get("id").unwrap().to_string();
                 }
@@ -86,5 +93,28 @@ impl Country {
             }
         }
         missmatches
+    }
+
+    pub fn compute_area(&mut self) {
+        self.area = Some(
+            *&mut self
+                .states
+                .iter_mut()
+                .fold(0.0, |acc, state| acc + state.compute_area()),
+        );
+    }
+
+    pub fn scale(&mut self, width: f64, height: f64) {
+        let (svg_width, svg_height) = self.svg_dims.unwrap();
+        let width_ratio = width / svg_width;
+        let height_ratio = height / svg_height;
+
+        for state in &mut self.states {
+            state.scale(width_ratio, height_ratio);
+        }
+
+        for city in &mut self.cities {
+            city.scale(width_ratio, height_ratio);
+        }
     }
 }

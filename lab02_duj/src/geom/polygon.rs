@@ -143,6 +143,13 @@ impl Polygon2D {
             );
         area.abs() / 2.0
     }
+
+    pub fn scale(&mut self, width_ratio: f64, height_ratio: f64) {
+        for vertex in self.vertices.iter_mut() {
+            vertex.x *= width_ratio;
+            vertex.y *= height_ratio;
+        }
+    }
 }
 
 #[cfg(test)]
