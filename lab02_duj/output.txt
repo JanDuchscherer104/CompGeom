@@ -2061,7 +2061,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Erfurt",
+                    location: Point2D {
+                        x: 335.38065,
+                        y: 418.90784,
+                    },
+                },
+            ),
         },
         State {
             name: "Schleswig-Holstein",
@@ -4945,7 +4953,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Kiel",
+                    location: Point2D {
+                        x: 275.17325,
+                        y: 78.439217,
+                    },
+                },
+            ),
         },
         State {
             name: "Sachsen-Anhalt",
@@ -6889,7 +6905,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Magdeburg",
+                    location: Point2D {
+                        x: 370.99631,
+                        y: 294.67706,
+                    },
+                },
+            ),
         },
         State {
             name: "Sachsen",
@@ -8545,7 +8569,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Dresden",
+                    location: Point2D {
+                        x: 499.89102,
+                        y: 405.76395,
+                    },
+                },
+            ),
         },
         State {
             name: "Saarland",
@@ -9157,7 +9189,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Saarbrücken",
+                    location: Point2D {
+                        x: 60.0,
+                        y: 589.0,
+                    },
+                },
+            ),
         },
         State {
             name: "Rheinland-Pfalz",
@@ -11109,7 +11149,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Mainz",
+                    location: Point2D {
+                        x: 148.39853,
+                        y: 523.63477,
+                    },
+                },
+            ),
         },
         State {
             name: "Nordrhein-Westfalen",
@@ -13577,7 +13625,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Düsseldorf",
+                    location: Point2D {
+                        x: 56.815434,
+                        y: 397.70804,
+                    },
+                },
+            ),
         },
         State {
             name: "Niedersachsen",
@@ -17204,7 +17260,7 @@ Country {
                         ],
                     },
                 ),
-                OuterBoundary(
+                ExclusionZone(
                     Polygon2D {
                         vertices: [
                             Point2D {
@@ -18127,7 +18183,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Hannover",
+                    location: Point2D {
+                        x: 253.54947,
+                        y: 273.47726,
+                    },
+                },
+            ),
         },
         State {
             name: "Mecklenburg-Vorpommern",
@@ -21531,7 +21595,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Schwerin",
+                    location: Point2D {
+                        x: 357.85245,
+                        y: 150.0945,
+                    },
+                },
+            ),
         },
         State {
             name: "Hessen",
@@ -23875,7 +23947,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Wiesbaden",
+                    location: Point2D {
+                        x: 148.82253,
+                        y: 508.37094,
+                    },
+                },
+            ),
         },
         State {
             name: "Hamburg",
@@ -24247,7 +24327,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Hamburg",
+                    location: Point2D {
+                        x: 265.84537,
+                        y: 156.03044,
+                    },
+                },
+            ),
         },
         State {
             name: "Bremen",
@@ -24557,7 +24645,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Bremen",
+                    location: Point2D {
+                        x: 193.76607,
+                        y: 200.55,
+                    },
+                },
+            ),
         },
         State {
             name: "Brandenburg",
@@ -26728,7 +26824,7 @@ Country {
                         ],
                     },
                 ),
-                OuterBoundary(
+                ExclusionZone(
                     Polygon2D {
                         vertices: [
                             Point2D {
@@ -27095,7 +27191,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Potsdam",
+                    location: Point2D {
+                        x: 458.76343,
+                        y: 260.75742,
+                    },
+                },
+            ),
         },
         State {
             name: "Berlin",
@@ -27467,7 +27571,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Berlin",
+                    location: Point2D {
+                        x: 477.0,
+                        y: 256.0,
+                    },
+                },
+            ),
         },
         State {
             name: "Bayern",
@@ -31595,7 +31707,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "München",
+                    location: Point2D {
+                        x: 366.9678,
+                        y: 700.0,
+                    },
+                },
+            ),
         },
         State {
             name: "Baden__x26__Württemberg",
@@ -34617,7 +34737,15 @@ Country {
                     },
                 ),
             ],
-            capital: None,
+            capital: Some(
+                City {
+                    name: "Stuttgart",
+                    location: Point2D {
+                        x: 215.0,
+                        y: 648.0,
+                    },
+                },
+            ),
         },
     ],
     cities: [

@@ -1,7 +1,8 @@
 use super::{City, State};
-use svg::node::element::path::Data;
-use svg::node::element::tag::{Path, Type::End, SVG};
-use svg::parser::Event;
+use svg::{
+    node::element::tag::{Path, Type::End, SVG},
+    parser::Event,
+};
 
 use std::path;
 
@@ -58,5 +59,32 @@ impl Country {
             }
         }
         Ok(country)
+    }
+
+    pub fn match_cities(&mut self) -> Vec<String> {
+        let mut missmatches = Vec::new();
+        for city in &self.cities {
+            for state in &mut self.states {
+                match (state.contains(city), state.capital.is_none()) {
+                    (true, true) => state.capital = Some(city.clone()),
+                    (true, false) => {
+                        // return Err(format!(
+                        //     "Tried to assign {} to {} but it already has capital {}",
+                        //     city.name,
+                        //     state.name,
+                        //     state.capital.as_ref().unwrap().name
+                        // ))
+                        missmatches.push(format!(
+                            "Tried to assign {} to {} but it already has capital {}",
+                            city.name,
+                            state.name,
+                            state.capital.as_ref().unwrap().name
+                        ))
+                    }
+                    _ => {}
+                }
+            }
+        }
+        missmatches
     }
 }

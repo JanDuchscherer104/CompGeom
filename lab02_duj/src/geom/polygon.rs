@@ -71,7 +71,8 @@ impl Polygon2D {
         if point.x < min.x || point.x > max.x || point.y < min.y || point.y > max.y {
             return false;
         }
-        let point_outside_bbox = { Point2D::new_relative(&max, 1.0, 1.0) }; // rather add f64::EPSILON?
+        let epsilon = f64::EPSILON * 10.0;
+        let point_outside_bbox = { Point2D::new_relative(&max, epsilon, epsilon) };
 
         // Retrieve index of a corner point that is not contained by (point_outside_bbox->point)
         let corner_idx = self
@@ -110,6 +111,7 @@ impl Polygon2D {
                     .signum()
                     <= 0.0
                 {
+                    // The point that is outside the polygon and the point of interest are on different sides of the edge
                     num_intersections += 1;
                 }
             }
@@ -117,5 +119,238 @@ impl Polygon2D {
 
         // The point is inside the polygon if the number of intersections is odd
         num_intersections % 2 == 1
+    }
+
+    pub fn contains_other(&self, other: &Polygon2D) -> bool {
+        other.vertices.iter().all(|point| self.contains(point))
+    }
+
+    pub fn area(&self) -> f64 {
+        let (area, _, _) = self
+            .vertices
+            .iter()
+            .skip(1)
+            .chain(self.vertices.first())
+            .fold(
+                // acc, current, next
+                // (p0, p1, p2): (-1, 0, 1)->(0, 1, 2)-...->(n-2, n-1, 0)
+                (
+                    0.0,
+                    *self.vertices.last().unwrap(),
+                    *self.vertices.first().unwrap(),
+                ),
+                |(acc, p0, p1), &p2| (acc + (p0.x - p2.x) * p1.y, p1, p2),
+            );
+        area.abs() / 2.0
+    }
+}
+
+#[cfg(test)]
+mod tests_contains {
+    use super::*;
+
+    #[test]
+    fn test_point_inside_convex_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(2.0, 2.0);
+        assert!(polygon.contains(&point));
+    }
+
+    #[test]
+    fn test_point_outside_convex_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(5.0, 5.0);
+        assert!(!polygon.contains(&point));
+    }
+
+    #[test]
+    fn test_point_on_edge_of_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(4.0, 2.0);
+        assert!(polygon.contains(&point)); // Depending on definition, might be true or false
+    }
+
+    #[test]
+    fn test_point_at_vertex_of_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(4.0, 4.0);
+        assert!(polygon.contains(&point)); // Depending on definition, might be true or false
+    }
+
+    #[test]
+    fn test_point_inside_concave_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(2.0, 2.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(1.0, 1.0);
+        assert!(polygon.contains(&point));
+    }
+
+    #[test]
+    fn test_point_outside_concave_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(2.0, 2.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(3.0, 3.0);
+        assert!(!polygon.contains(&point));
+    }
+
+    #[test]
+    fn test_point_on_edge_of_concave_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(2.0, 2.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(2.0, 2.0);
+        assert!(polygon.contains(&point)); // Depending on definition, might be true or false
+    }
+
+    #[test]
+    fn test_point_at_vertex_of_concave_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(2.0, 2.0);
+        polygon.push(0.0, 4.0);
+
+        let point = Point2D::new(4.0, 4.0);
+        assert!(polygon.contains(&point)); // Depending on definition, might be true or false
+    }
+
+    #[test]
+    fn test_degenerate_polygon_line() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+
+        let point = Point2D::new(2.0, 0.0);
+        assert!(polygon.contains(&point));
+    }
+
+    #[test]
+    fn test_degenerate_polygon_point() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+
+        let point = Point2D::new(0.0, 0.0);
+        assert!(!polygon.contains(&point));
+    }
+}
+
+#[cfg(test)]
+mod tests_area {
+    use super::*;
+
+    #[test]
+    fn test_area_square() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let expected_area = 16.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_area_triangle() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(2.0, 4.0);
+
+        let expected_area = 8.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_area_concave_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(2.0, 2.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(0.0, 4.0);
+
+        let expected_area = 12.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_area_degenerate_polygon_line() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+
+        let expected_area = 0.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_area_degenerate_polygon_point() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+
+        let expected_area = 0.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_area_polygon_with_overlapping_vertices() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(4.0, 0.0);
+        polygon.push(4.0, 4.0);
+        polygon.push(4.0, 0.0); // Overlapping vertex
+        polygon.push(0.0, 4.0);
+
+        let expected_area = 8.0;
+        assert_eq!(polygon.area(), expected_area, "Area: {}", polygon.area());
+    }
+
+    #[test]
+    fn test_area_complex_polygon() {
+        let mut polygon = Polygon2D::new();
+        polygon.push(0.0, 0.0);
+        polygon.push(6.0, 0.0);
+        polygon.push(6.0, 6.0);
+        polygon.push(3.0, 3.0);
+        polygon.push(0.0, 6.0);
+
+        let expected_area = 9.0 + 18.0;
+        assert!((polygon.area() - expected_area).abs() < f64::EPSILON);
     }
 }

@@ -11,14 +11,13 @@ use super::{city::City, geom::Polygon2D};
 pub enum RegionType {
     OuterBoundary(Polygon2D),
     ExclusionZone(Polygon2D),
-    UnspecifiedRegion(Polygon2D),
 }
 
 #[derive(Clone, Debug)]
 pub struct State {
     pub name: String,
     pub regions: Vec<RegionType>,
-    pub capital: Option<&'static City>,
+    pub capital: Option<City>,
 }
 
 impl State {
@@ -65,19 +64,45 @@ impl State {
             }
         }
 
-        let regions = regions
+        let outer_perimeter = regions.remove(0);
+
+        let mut classified_regions: Vec<RegionType> = regions
             .into_iter()
             .map(|polygon| {
-                if true {
-                    RegionType::OuterBoundary(polygon)
-                } else if false {
+                if outer_perimeter.contains_other(&polygon) {
                     RegionType::ExclusionZone(polygon)
                 } else {
-                    RegionType::UnspecifiedRegion(polygon)
+                    RegionType::OuterBoundary(polygon)
                 }
             })
             .collect();
 
-        Ok(State::new(name, regions))
+        classified_regions.insert(0, RegionType::OuterBoundary(outer_perimeter));
+
+        Ok(State::new(name, classified_regions))
+    }
+
+    pub fn area(&self) -> f64 {
+        self.regions
+            .iter()
+            .map(|region| match region {
+                RegionType::OuterBoundary(polygon) => polygon.area(),
+                RegionType::ExclusionZone(polygon) => -polygon.area(),
+            })
+            .sum()
+    }
+
+    pub fn contains(&self, city: &City) -> bool {
+        let in_outer_boundary = self.regions.iter().any(|region| match region {
+            RegionType::OuterBoundary(polygon) => polygon.contains(&city.location),
+            _ => false,
+        });
+
+        let in_exclusion_zone = self.regions.iter().any(|region| match region {
+            RegionType::ExclusionZone(polygon) => polygon.contains(&city.location),
+            _ => false,
+        });
+
+        in_outer_boundary && !in_exclusion_zone
     }
 }
