@@ -37,12 +37,12 @@ impl Line2D {
     pub fn contains(&self, point: Point2D) -> bool {
         let dx = self.end.x - self.start.x;
         let dy = self.end.y - self.start.y;
-    
+
         // Handle the special case of a zero-length line (both dx and dy are zero)
         if dx.abs() <= f64::EPSILON && dy.abs() <= f64::EPSILON {
             return point.x == self.start.x && point.y == self.start.y;
         }
-    
+
         // Compute lambda for x and y coordinates, handling zero cases safely
         let lambda_x = if dx.abs() > f64::EPSILON {
             Some((point.x - self.start.x) / dx)
@@ -54,7 +54,7 @@ impl Line2D {
                 None
             }
         };
-    
+
         let lambda_y = if dy.abs() > f64::EPSILON {
             Some((point.y - self.start.y) / dy)
         } else {
@@ -65,20 +65,18 @@ impl Line2D {
                 None
             }
         };
-    
+
         // Check if lambdas are defined and compare them if they are
         match (lambda_x, lambda_y) {
             (Some(lx), Some(ly)) if (lx - ly).abs() <= f64::EPSILON => {
                 // Both lambdas are approximately equal and within the segment range
                 lx >= 0.0 && lx <= 1.0 && ly >= 0.0 && ly <= 1.0
-            },
-            (Some(lx), None) => lx >= 0.0 && lx <= 1.0,  // Only lambda_x is valid (vertical line)
-            (None, Some(ly)) => ly >= 0.0 && ly <= 1.0,  // Only lambda_y is valid (horizontal line)
-            _ => false,  // Either lambda is None, or they don't match
+            }
+            (Some(lx), None) => lx >= 0.0 && lx <= 1.0, // Only lambda_x is valid (vertical line)
+            (None, Some(ly)) => ly >= 0.0 && ly <= 1.0, // Only lambda_y is valid (horizontal line)
+            _ => false, // Either lambda is None, or they don't match
         }
     }
-    
-
 
     pub fn intersects(&self, other: Line2D) -> bool {
         // if self.is_zero_length() && other.is_zero_length() {
@@ -93,7 +91,8 @@ impl Line2D {
 
         if ccw1 == 0.0 && ccw2 == 0.0 {
             // They are colinear -> check whether they overlap
-            self.parametric_overlap(&other)
+            // self.parametric_overlap(&other)
+            self.bbox_overlap(&other)
         } else {
             // If line segments straddle each other, they intersect
             ccw1 * ccw2 <= 0.0 && ccw3 * ccw4 <= 0.0
@@ -102,12 +101,12 @@ impl Line2D {
 
     /// Calculates whether two colinear lines overlap.
     fn parametric_overlap(&self, other: &Line2D) -> bool {
-        if self.is_zero_length(){
+        if self.is_zero_length() {
             return other.contains(self.start);
         } else if other.is_zero_length() {
             return self.contains(other.start);
         }
-        
+
         // calculate direction. Take care if one line is a point
         let direction = Point2D {
             x: self.end.x - self.start.x,
@@ -126,6 +125,22 @@ impl Line2D {
         let lambda2 = to_param(&other.end);
 
         lambda1.min(lambda2) <= 1.0 && lambda1.max(lambda2) >= 0.0
+    }
+
+    fn bbox_overlap(&self, other: &Line2D) -> bool {
+        // Determine the bounding boxes of both line segments
+        let min_x1 = self.start.x.min(self.end.x);
+        let max_x1 = self.start.x.max(self.end.x);
+        let min_y1 = self.start.y.min(self.end.y);
+        let max_y1 = self.start.y.max(self.end.y);
+
+        let min_x2 = other.start.x.min(other.end.x);
+        let max_x2 = other.start.x.max(other.end.x);
+        let min_y2 = other.start.y.min(other.end.y);
+        let max_y2 = other.start.y.max(other.end.y);
+
+        // Check for overlap in both x and y dimensions
+        max_x1 >= min_x2 && min_x1 <= max_x2 && max_y1 >= min_y2 && min_y1 <= max_y2
     }
 
     /// Calculates whether a triangle is clockwise or counterclockwise oriented.
@@ -147,8 +162,8 @@ impl PartialEq for Line2D {
 
 #[cfg(test)]
 mod tests {
-    use geo::{Intersects, LineString};
     use geo::line_string;
+    use geo::{Intersects, LineString};
 
     use super::{Line2D, Point2D};
 
@@ -211,7 +226,10 @@ mod tests {
         let result: bool = line1.intersects(line2);
 
         assert!(!result);
-        assert_eq!(line1.intersects(line2), intersect_using_external_library(line1, line2))
+        assert_eq!(
+            line1.intersects(line2),
+            intersect_using_external_library(line1, line2)
+        )
     }
 
     #[test]
@@ -386,5 +404,4 @@ mod tests {
         assert!(result);
         assert_eq!(result, intersect_using_external_library(line1, line2))
     }
-
 }
