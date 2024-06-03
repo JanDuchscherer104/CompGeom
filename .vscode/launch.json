@@ -8,16 +8,16 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=lab02",
-                    "--package=lab02"
+                    "--bin=lab03",
+                    "--package=lab03"
                 ],
                 "filter": {
-                    "name": "lab02",
+                    "name": "lab03",
                     "kind": "bin"
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}/lab02_duj"
+            "cwd": "${workspaceFolder}/lab03"
         }
     ]
 }
