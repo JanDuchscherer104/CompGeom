@@ -4,7 +4,9 @@ use std::{
     path::Path,
 };
 
-use super::line::Line2D;
+use plotters::prelude::*;
+
+use super::{line::Line2D, point::Point2D};
 
 #[derive(Clone, Debug)]
 pub struct LineSegments2D {
@@ -37,6 +39,38 @@ impl LineSegments2D {
             .collect();
 
         Ok(LineSegments2D { lines: lines? })
+    }
+
+    pub fn plot(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let (mut min_x, mut min_y, mut max_x, mut max_y) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+
+        for line in &self.lines {
+            min_x = min_x.min(line.p.x).min(line.q.x);
+            min_y = min_y.min(line.p.y).min(line.q.y);
+            max_x = max_x.max(line.p.x).max(line.q.x);
+            max_y = max_y.max(line.p.y).max(line.q.y);
+        }
+
+        let root = SVGBackend::new("line_segments.svg", (800, 800)).into_drawing_area();
+        root.fill(&WHITE)?;
+
+        let mut chart = ChartBuilder::on(&root)
+            .caption("Line Segments", ("Arial", 30))
+            .margin(2)
+            .x_label_area_size(30)
+            .y_label_area_size(30)
+            .build_cartesian_2d(min_x..max_x, min_y..max_y)?;
+
+        chart.configure_mesh().draw()?;
+
+        for line in &self.lines {
+            chart.draw_series(LineSeries::new(
+                vec![(line.p.x, line.p.y), (line.q.x, line.q.y)],
+                &RED,
+            ))?;
+        }
+
+        Ok(())
     }
 }
 
