@@ -26,6 +26,7 @@ impl Point2D {
         (self.x - other.x).abs() < f64::EPSILON && (self.y - other.y).abs() < f64::EPSILON
     }
 
+    /// Returns the cross product of the vectors p->q and p->r.
     pub fn ccw(p: &Self, q: &Self, r: &Self) -> f64 {
         p.x * (q.y - r.y) + p.y * (q.x - r.x) + q.x * r.y - q.y * r.x
         // (p.x * q.y - p.y * q.x) + (q.x * r.y - q.y * r.x) + (p.y * r.x - p.x * r.y)
@@ -106,5 +107,38 @@ mod tests {
         let r = Point2D::new(2.0, 0.0);
         assert!(Point2D::ccw(&p, &q, &r) < 0.0);
         assert!(Point2D::ccw(&p, &r, &q) > 0.0);
+    }
+
+    #[test]
+    fn test_eq() {
+        let p1 = Point2D::new(1.0, 2.0);
+        let p2 = Point2D::new(1.0, 2.0);
+        assert_eq!(p1, p2);
+    }
+
+    #[test]
+    fn test_ne() {
+        let p1 = Point2D::new(1.0, 2.0);
+        let p2 = Point2D::new(2.0, 1.0);
+        assert_ne!(p1, p2);
+    }
+
+    #[test]
+    fn test_ord() {
+        let p1 = Point2D::new(1.0, 2.0);
+        let p2 = Point2D::new(2.0, 1.0);
+        let p3 = Point2D::new(1.0, 3.0);
+        assert!(p1 < p2);
+        assert!(p2 > p1);
+        assert!(p1 < p3);
+        assert!(p3 > p1);
+    }
+
+    #[test]
+    fn test_ord_eq() {
+        let p1 = Point2D::new(1.0, 2.0);
+        let p2 = Point2D::new(1.0, 2.0);
+        assert!(p1 <= p2);
+        assert!(p2 >= p1);
     }
 }
