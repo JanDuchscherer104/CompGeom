@@ -1,0 +1,9 @@
+setup.py
+qhull_analyzer/__init__.py
+qhull_analyzer/qhull.py
+qhull_analyzer/qhull_options.py
+qhull_analyzer.egg-info/PKG-INFO
+qhull_analyzer.egg-info/SOURCES.txt
+qhull_analyzer.egg-info/dependency_links.txt
+qhull_analyzer.egg-info/requires.txt
+qhull_analyzer.egg-info/top_level.txt
