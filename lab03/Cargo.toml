@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ordered-float = { version = "4.0", default-features = false }
+geo = "0.28.0"
