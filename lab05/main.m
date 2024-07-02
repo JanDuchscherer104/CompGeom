@@ -22,8 +22,9 @@ function [center, radius] = max_inscribed_circle(vertices)
     % Function coefficients: maximize radius, ignore x and y
     c = [0; 0; -1];
     
-    A = zeros(n, 3);
-    b = zeros(n, 1);
+    % Initialize constraint arrays
+    A = [];
+    b = [];
     
     for i = 1:n
         j = mod(i, n) + 1;  % Next vertex (wrap around)
