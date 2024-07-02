@@ -14,6 +14,8 @@ fprintf('Found solution:\n');
 fprintf('Center: (%f, %f)\n', center(1), center(2));
 fprintf('Radius: %f\n', radius);
 
+plot_result(vertices, center, radius);
+
 function [center, radius] = max_inscribed_circle(vertices)
     n = size(vertices, 1);
     
@@ -74,4 +76,26 @@ function [center, radius] = max_inscribed_circle(vertices)
         
         error('Failed to find a solution.');
     end
+end
+
+function plot_result(vertices, center, radius)
+    figure;
+    hold on;
+    
+    % Plot the polygon
+    plot([vertices(:,1); vertices(1,1)], [vertices(:,2); vertices(1,2)], 'b-', 'LineWidth', 2);
+    
+    % Plot the inscribed circle
+    theta = linspace(0, 2*pi, 100);
+    x = center(1) + radius * cos(theta);
+    y = center(2) + radius * sin(theta);
+    plot(x, y, 'r-', 'LineWidth', 2);
+    
+    % Plot the center point
+    plot(center(1), center(2), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+    
+    axis equal;
+    title('Polygon with Maximum Inscribed Circle');
+    legend('Polygon', 'Inscribed Circle', 'Circle Center');
+    hold off;
 end
