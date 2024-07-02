@@ -54,6 +54,8 @@ function [center, radius] = max_inscribed_circle(vertices)
         A(i, :) = [normal, -1];
         b(i) = dot(normal, vertices(i, :));
     end
+
+    verify_normals(vertices, A);
     
     % bounding box as lower and upper bounds
     max_x = max(vertices(:,1));
@@ -108,5 +110,45 @@ function plot_result(vertices, center, radius)
     axis equal;
     title('Polygon with Maximum Inscribed Circle');
     legend('Polygon', 'Inscribed Circle', 'Circle Center');
+    hold off;
+end
+
+function verify_normals(vertices, A)
+    n = size(vertices, 1);
+    
+    figure;
+    hold on;
+    
+    % Plot the polygon
+    plot([vertices(:,1); vertices(1,1)], [vertices(:,2); vertices(1,2)], 'b-', 'LineWidth', 2);
+    
+    for i = 1:n
+        if norm(A(i, 1:2)) < eps
+            continue; % Skip zero-length edges
+        end
+        
+        % Extract the normal from the constraint matrix A
+        normal = A(i, 1:2);
+        
+        % Find the corresponding edge
+        j = mod(i, n) + 1;  % Next vertex (wrap around)
+        
+        % Midpoint of the edge
+        midpoint = (vertices(i, :) + vertices(j, :)) / 2;
+        
+        % Test point slightly in the direction of the normal
+        test_point = midpoint + normal * 0.1;
+        
+        % Check if the test point is inside the polygon
+        if ~inpolygon(test_point(1), test_point(2), vertices(:,1), vertices(:,2))
+            normal = -normal;  % Reverse the normal
+        end
+        
+        % Plot the normal vector
+        quiver(midpoint(1), midpoint(2), normal(1), normal(2), 0.5, 'r', 'LineWidth', 1, 'MaxHeadSize', 2);
+    end
+    
+    axis equal;
+    title('Polygon with Normal Vectors');
     hold off;
 end
