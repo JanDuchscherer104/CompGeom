@@ -41,7 +41,14 @@ function [center, radius] = max_inscribed_circle(vertices)
             warning('Edge %d has zero length. Skipping this constraint.', i);
             continue;
         end
-        normal = normal / norm(normal);
+        normal = normal / normal_length;
+        
+        % Ensure the normal points inward
+        midpoint = (vertices(i, :) + vertices(j, :)) / 2;
+        test_point = midpoint + normal * 0.1;
+        if ~inpolygon(test_point(1), test_point(2), vertices(:,1), vertices(:,2))
+            normal = -normal;
+        end
         
         % Add the constraint: normal * (x, y) - r >= normal * vertex_i
         A(i, :) = [normal, -1];
