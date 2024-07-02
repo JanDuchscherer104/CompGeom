@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Point2D {
     pub x: OrderedFloat<f64>,
     pub y: OrderedFloat<f64>,

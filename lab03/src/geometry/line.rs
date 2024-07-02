@@ -70,6 +70,50 @@ impl Line2D {
         }
     }
 
+
+    /// Finds the intersection point between two line segments.
+    /// If overlapping, it will return one of the overlapping endpoints.
+    pub fn find_intersection(&self, other: Line2D) -> Option<Point2D> {
+        let (x1, y1) = (self.start.x.0, self.start.y.0);
+        let (x2, y2) = (self.end.x.0, self.end.y.0);
+        let (x3, y3) = (other.start.x.0, other.start.y.0);
+        let (x4, y4) = (other.end.x.0, other.end.y.0);
+
+        let denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+
+        if denominator.abs() < f64::EPSILON {
+            return if self.contains(other.start) {
+                Some(other.start)
+            } else if self.contains(other.end) {
+                Some(other.end)
+            } else if other.contains(self.start) {
+                Some(self.start)
+            } else if other.contains(self.end) {
+                Some(self.end)
+            } else {
+                None
+            };
+        }
+
+        let ua_numerator = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+        let ub_numerator = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
+
+        let ua = ua_numerator / denominator;
+        let ub = ub_numerator / denominator;
+
+        let tolerance = f64::EPSILON;
+
+        // Check if the intersection point is within both line segments or at their endpoints
+        if (ua >= -tolerance && ua <= 1.0 + tolerance) && (ub >= -tolerance && ub <= 1.0 + tolerance) {
+            let intersection_x = x1 + ua * (x2 - x1);
+            let intersection_y = y1 + ua * (y2 - y1);
+            Some(Point2D { x: OrderedFloat(intersection_x), y: OrderedFloat(intersection_y) })
+        } else {
+            None
+        }
+    }
+
+
     pub fn intersects(&self, other: Line2D) -> bool {
         // if self.is_zero_length() && other.is_zero_length() {
         //     let res = self.start.approx_eq(&other.start, 1e-6);
@@ -173,6 +217,8 @@ impl Ord for Line2D {
 mod tests {
     use geo::line_string;
     use geo::{Intersects, LineString};
+    use ordered_float::OrderedFloat;
+    use crate::geometry::point::Point2D;
 
     use super::Line2D;
 
@@ -414,5 +460,50 @@ mod tests {
         let mut lines = vec![line4, line1, line3, line2, line5];
         lines.sort();
         assert_eq!(lines, vec![line1, line2, line3, line4, line5]);
+    }
+
+    #[test]
+    fn get_intersection_when_intersection_at_midpoint() {
+        let line1 = Line2D::new(1.0, 1.0, 3.0, 3.0);
+        let line2 = Line2D::new(1.0, 3.0, 3.0, 1.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
+    }
+
+    #[test]
+    fn get_intersection_when_parallel_lines() {
+        let line1 = Line2D::new(1.0, 1.0, 3.0, 3.0);
+        let line2 = Line2D::new(1.0, 2.0, 3.0, 4.0);
+
+        let intersection = line1.find_intersection(line2);
+        assert!(intersection.is_none());
+    }
+
+    #[test]
+    fn get_intersection_when_outside_segments() {
+        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(3.0, 3.0, 4.0, 4.0);
+
+        let intersection = line1.find_intersection(line2);
+        assert!(intersection.is_none());
+    }
+
+    #[test]
+    fn get_intersection_when_intersection_at_endpoint() {
+        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(2.0, 2.0, 3.0, 0.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
+    }
+
+    #[test]
+    fn get_intersection_when_intersection_at_endpoint_and_coincident() {
+        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(2.0, 2.0, 3.0, 3.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
     }
 }
