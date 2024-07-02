@@ -1,7 +1,8 @@
+use std::cmp::Ordering;
 use ordered_float::OrderedFloat;
 use crate::geometry::point::Point2D;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash)]
 pub struct Line2D {
     pub start: Point2D,
     pub end: Point2D,
@@ -148,6 +149,23 @@ impl Line2D {
 impl PartialEq for Line2D {
     fn eq(&self, other: &Self) -> bool {
         self.start == other.start && self.end == other.end
+    }
+}
+
+impl Eq for Line2D {}
+
+impl PartialOrd for Line2D {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Line2D {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.y.cmp(&other.start.y)
+            .then_with(|| self.start.x.cmp(&other.start.x))
+            .then_with(|| self.end.y.cmp(&other.end.y))
+            .then_with(|| self.end.x.cmp(&other.end.x))
     }
 }
 
@@ -357,5 +375,44 @@ mod tests {
 
         assert!(result);
         assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn equality() {
+        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line3 = Line2D::new(1.0, 1.0, 3.0, 3.0);
+        let line4 = Line2D::new(0.5, 0.5, 1.5, 1.5);
+
+        // Test equality
+        assert_eq!(line1, line2);
+        assert_ne!(line1, line3);
+        assert_ne!(line1, line4);
+
+        // Test equality with self
+        assert_eq!(line1, line1);
+        assert_eq!(line2, line2);
+    }
+
+    #[test]
+    fn ordering() {
+        let line1 = Line2D::new(0.5, 0.5, 1.5, 1.5);
+        let line2 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line3 = Line2D::new(1.0, 1.5, 3.0, 3.0);
+        let line4 = Line2D::new(0.0, 2.0, 3.0, 3.0);
+        let line5 = Line2D::new(2.0, 2.0, 1.0, 1.0);
+
+        // Test ordering by start y-coordinate
+        assert!(line1 < line2);
+        assert!(line2 < line3);
+        assert!(line3 < line4);
+        // Test ordering with same y, different x
+        assert!(line4 < line5);
+
+
+        // Test sorting
+        let mut lines = vec![line4, line1, line3, line2, line5];
+        lines.sort();
+        assert_eq!(lines, vec![line1, line2, line3, line4, line5]);
     }
 }
