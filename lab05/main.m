@@ -61,6 +61,9 @@ function [center, radius] = max_inscribed_circle(vertices)
     max_y = max(vertices(:,2));
     min_y = min(vertices(:,2));
     max_radius = min(max_x - min_x, max_y - min_y) / 2;
+
+    fprintf("Bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
+
     
     lb = [min_x; min_y; 0];
     ub = [max_x; max_y; max_radius];
