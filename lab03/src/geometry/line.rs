@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt::Display;
 use ordered_float::OrderedFloat;
 use crate::geometry::point::Point2D;
 
@@ -210,6 +211,12 @@ impl Ord for Line2D {
             .then_with(|| self.start.x.cmp(&other.start.x))
             .then_with(|| self.end.y.cmp(&other.end.y))
             .then_with(|| self.end.x.cmp(&other.end.x))
+    }
+}
+
+impl Display for Line2D {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("({}, {}) -> ({}, {})", self.start.x.0, self.start.y.0, self.end.x.0, self.end.y.0))
     }
 }
 

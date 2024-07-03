@@ -19,10 +19,12 @@ impl SweepLine {
     }
 
     pub fn add(&mut self, line: Line2D) {
+        println!("Adding line {} to sweepline", line);
         self.lines.insert(line);
     }
 
     pub fn remove(&mut self, line: &Line2D) {
+        println!("Removing line {} from sweepline", line);
         self.lines.remove(line);
         self.swaps.remove(line);
     }
@@ -58,6 +60,7 @@ impl SweepLine {
     }
 
     pub fn swap(&mut self, line1: &Line2D, line2: &Line2D) {
+        println!("Swapping lines {} and {}", line1, line2);
         self.swaps.add(line1.clone(), line2.clone())
     }
 }
