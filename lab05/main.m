@@ -3,6 +3,11 @@ filename = 'data/polygon.txt';
 
 vertices = readmatrix(filename);
 
+% remove last line if it is the same as the first
+if isequal(vertices(1, :), vertices(end, :))
+    vertices = vertices(1:end-1, :);
+end
+
 fprintf('Read %i vertices\n', size(vertices, 1));
 
 % disp('Polygon vertices:');
