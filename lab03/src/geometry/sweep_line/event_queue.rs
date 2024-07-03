@@ -35,11 +35,6 @@ impl EventQueue {
     }
 }
 
-pub struct Neighbors {
-    above: Option<Line2D>,
-    below: Option<Line2D>,
-}
-
 #[cfg(test)]
 mod tests {
     use ordered_float::OrderedFloat;
