@@ -1,5 +1,81 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::cell::RefCell;
+use std::cmp::Ordering;
+use std::collections::{BTreeSet, HashSet};
+use std::rc::Rc;
 use crate::geometry::line::Line2D;
+
+#[derive(Debug)]
+struct OrderedLine {
+    value: Line2D,
+    swap_target:  Option<Rc<RefCell<OrderedLine>>>,
+}
+
+impl OrderedLine {
+
+    pub fn new(value: Line2D) -> OrderedLine {
+        OrderedLine {
+            value,
+            swap_target: None,
+        }
+    }
+
+    pub fn set_swap_target(&mut self, target: Rc<RefCell<OrderedLine>>) {
+        self.swap_target = Some(target);
+    }
+
+    fn get_value(&self) -> Line2D {
+        let mut visited = HashSet::new();
+        self.get_value_recursive(&mut visited)
+    }
+
+    fn get_value_recursive(&self, visited: &mut HashSet<Line2D>) -> Line2D {
+
+        if !visited.insert(self.value) {
+
+            panic!("Cycle detected in swap chain");
+        }
+
+        if let Some(ref target) = self.swap_target {
+            // if the target has already been visited, return this value
+            if visited.contains(&(target.borrow().value)) {
+                println!("Next value is already visited, returning current value");
+                return self.value.clone();
+            } else {
+                target.borrow().get_value_recursive(visited)
+            }
+        } else {
+            self.value.clone()
+        }
+    }
+}
+
+
+impl PartialEq for OrderedLine {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl Eq for OrderedLine {}
+
+impl PartialOrd for OrderedLine {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for OrderedLine {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.get_value().cmp(&other.get_value())
+        // match (&self.swap_target, &other.swap_target) {
+        //     (Some(target), Some(other_target)) => target.borrow().cmp(&other_target.borrow()),
+        //     (Some(target), None) => target.borrow().get_value().cmp(&other.value),
+        //     (None, Some(other_target)) => self.value.cmp(&other_target.borrow().get_value()),
+        //     (None, None) => self.value.cmp(&other.value),
+        // }
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Neighbors {
@@ -9,87 +85,69 @@ pub struct Neighbors {
 
 #[derive(Debug)]
 pub struct SweepLine {
-    lines: BTreeSet<Line2D>,
-    swaps: Swaps,
+    lines: BTreeSet<Rc<RefCell<OrderedLine>>>,
 }
 
 impl SweepLine {
-    pub fn new() -> SweepLine {
-        SweepLine { lines: BTreeSet::new(), swaps: Swaps::new() }
+    pub fn new() -> Self {
+        SweepLine {
+            lines: BTreeSet::new(),
+        }
     }
 
     pub fn add(&mut self, line: Line2D) {
-        println!("Adding line {} to sweepline", line);
-        self.lines.insert(line);
+        let ordered_line = Rc::new(RefCell::new(OrderedLine::new(line)));
+        self.lines.insert(ordered_line);
     }
 
     pub fn remove(&mut self, line: &Line2D) {
-        println!("Removing line {} from sweepline", line);
-        self.lines.remove(line);
-        self.swaps.remove(line);
-    }
-
-    pub fn get_neighbors(&self, line: &Line2D) -> Neighbors {
-        let mut smaller = self.lines.range(..line).next_back().cloned();
-        let mut bigger = self.lines.range(line..).nth(1).cloned();
-
-        // consider swaps
-        if bigger.is_some() {
-            if let Some(swaps) = self.swaps.get_swaps(&bigger.unwrap()) {
-            // bigger = smallest line in swaps
-            for swap in swaps.iter() {
-                    if swap < &bigger.unwrap() && swap != line {
-                        bigger = Some(swap.clone());
-                    }
-                }
-            }
+        let remove = self.find_ordered_line(line);
+        if remove.is_some() {
+            self.lines.remove(&remove.unwrap());
         }
-
-        if smaller.is_some() {
-            if let Some(swaps) = self.swaps.get_swaps(&smaller.unwrap()) {
-                // smaller = biggest line in swaps
-                for swap in swaps.iter() {
-                    if swap > &smaller.unwrap() && swap != line{
-                        smaller = Some(swap.clone());
-                    }
-                }
-            }
-        }
-
-        Neighbors { bigger, smaller }
     }
 
     pub fn swap(&mut self, line1: &Line2D, line2: &Line2D) {
-        println!("Swapping lines {} and {}", line1, line2);
-        self.swaps.add(line1.clone(), line2.clone())
-    }
-}
+        let ordered1 = self.find_ordered_line(line1)
+            .expect("Can't swap the lines, because line1 is not in the sweepline");
+        let ordered2 = self.find_ordered_line(line2)
+            .expect("Can't swap the lines, because line2 is not in the sweepline");
 
-#[derive(Debug)]
-struct Swaps {
-    swaps: HashMap<Line2D, HashSet<Line2D>>,
-}
-impl Swaps {
-    pub fn new() -> Self {
-        Swaps {
-            swaps: HashMap::new(),
+        ordered1.borrow_mut().set_swap_target(ordered2.clone());
+        ordered2.borrow_mut().set_swap_target(ordered1.clone());
+
+    }
+
+    pub fn get_neighbors(&self, line: &Line2D) -> Neighbors {
+        let mut neighbors = Neighbors {
+            bigger: None,
+            smaller: None,
+        };
+
+        let mut iter = self.lines.iter();
+        while let Some(ol) = iter.next() {
+            if ol.borrow().get_value() == *line {
+                if let Some(prev) = iter.next_back() {
+                    neighbors.bigger = Some(prev.borrow().value);
+                }
+                if let Some(next) = iter.next() {
+                    neighbors.smaller = Some(next.borrow().value);
+                }
+                break;
+            }
         }
+
+        neighbors
     }
 
-    pub fn add(&mut self, line1: Line2D, line2: Line2D) {
-        self.swaps.entry(line1).or_insert_with(HashSet::new).insert(line2);
-        self.swaps.entry(line2).or_insert_with(HashSet::new).insert(line1);
+    pub fn contains(&self, line: Line2D) -> bool {
+        self.lines.iter().any(|ol| ol.borrow().value == line)
     }
 
-    pub fn remove(&mut self, line: &Line2D) {
-        self.swaps.remove(&line);
-        for (_, lines) in self.swaps.iter_mut() {
-            lines.remove(&line);
-        }
-    }
-
-    pub fn get_swaps(&self, line: &Line2D) -> Option<HashSet<Line2D>> {
-        self.swaps.get(line).cloned()
+    /// Find the ordered line to the line.
+    /// Returns a reference so that the underlying OrderedLine can be modified.
+    fn find_ordered_line(&self, line: &Line2D) -> Option<Rc<RefCell<OrderedLine>>> {
+        self.lines.iter().find(|ol| ol.borrow().value == *line).cloned()
     }
 }
 
@@ -98,23 +156,71 @@ mod tests {
     use super::*;
 
     #[test]
+    fn ordered_line_should_get_value_when_swapped() {
+        let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
+        let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
+        let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
+
+        let ordered1 =  Rc::new(RefCell::new(OrderedLine::new(line1)));
+        let ordered2 =  Rc::new(RefCell::new(OrderedLine::new(line2)));
+        let ordered3 =  Rc::new(RefCell::new(OrderedLine::new(line3)));
+
+        ordered1.borrow_mut().set_swap_target(ordered3.clone());
+
+        assert_eq!(ordered1.borrow().get_value(), line3);
+    }
+
+    #[test]
+    fn ordered_line_sort_no_swaps() {
+        let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
+        let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
+        let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
+
+        let ordered1 = OrderedLine::new(line1);
+        let ordered2 = OrderedLine::new(line2);
+        let ordered3 = OrderedLine::new(line3);
+
+        assert!(ordered1 < ordered2);
+        assert!(ordered2 < ordered3);
+    }
+
+    #[test]
+    fn ordered_line_sort_swapped() {
+        let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
+        let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
+        let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
+
+        let ordered1 =  Rc::new(RefCell::new(OrderedLine::new(line1)));
+        let ordered2 =  Rc::new(RefCell::new(OrderedLine::new(line2)));
+        let ordered3 =  Rc::new(RefCell::new(OrderedLine::new(line3)));
+
+        ordered1.borrow_mut().set_swap_target(ordered3.clone());
+        ordered3.borrow_mut().set_swap_target(ordered1.clone());
+
+        assert_eq!(ordered1.borrow().get_value(), line3);
+        assert_eq!(ordered2.borrow().get_value(), line2);
+        assert_eq!(ordered3.borrow().get_value(), line1);
+
+        assert!(ordered3 < ordered2);
+        assert!(ordered3 < ordered1);
+        assert!(ordered2 < ordered1);
+    }
+
+    #[test]
     fn test_add_and_remove_lines() {
         let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
         let line2 = Line2D::new(0.5, 0.5, 1.5, 1.5);
-        let mut sweepline = SweepLine {
-            lines: BTreeSet::new(),
-            swaps: Swaps::new(),
-        };
+        let mut sweepline = SweepLine::new();
 
         sweepline.add(line1);
         sweepline.add(line2);
 
-        assert!(sweepline.lines.contains(&line1));
-        assert!(sweepline.lines.contains(&line2));
+        assert!(sweepline.contains(line1));
+        assert!(sweepline.contains(line2));
 
         sweepline.remove(&line1);
-        assert!(!sweepline.lines.contains(&line1));
-        assert!(sweepline.lines.contains(&line2));
+        assert!(!sweepline.contains(line1));
+        assert!(sweepline.contains(line2));
     }
 
     #[test]
@@ -122,10 +228,7 @@ mod tests {
         let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
         let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
         let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
-        let mut sweepline = SweepLine {
-            lines: BTreeSet::new(),
-            swaps: Swaps::new(),
-        };
+        let mut sweepline = SweepLine::new();
 
         sweepline.add(line1);
         sweepline.add(line2);
@@ -149,10 +252,7 @@ mod tests {
         let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
         let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
         let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
-        let mut sweepline = SweepLine {
-            lines: BTreeSet::new(),
-            swaps: Swaps::new(),
-        };
+        let mut sweepline = SweepLine::new();
 
         sweepline.add(line1);
         sweepline.add(line2);
@@ -171,10 +271,7 @@ mod tests {
         let line1 = Line2D::new(1.0, 0.0, 2.0, 2.0);
         let line2 = Line2D::new(0.5, 1.0, 1.5, 1.5);
         let line3 = Line2D::new(2.0, 2.0, 3.0, 3.0);
-        let mut sweepline = SweepLine {
-            lines: BTreeSet::new(),
-            swaps: Swaps::new(),
-        };
+        let mut sweepline = SweepLine::new();
 
         sweepline.add(line1);
         sweepline.add(line2);
