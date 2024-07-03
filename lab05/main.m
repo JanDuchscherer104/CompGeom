@@ -53,7 +53,11 @@ function [center, radius] = max_inscribed_circle(vertices)
         
         p = normalized_vertices(i,:);
 
-        % Add constraint: normal * (x - p) >= r
+        % d(M,g) >= r
+        % n * (x - p) >= r
+        % n_x * x - n_x * p_x + n_y * y - n_y * p_y >= r
+        % n_x * x + n_y * y - r >= n_x * p_x + n_y * p_y
+        % n * x - r >= n * p
         A = [A; -normal, 1];
         b = [b; -normal * p'];
     end
