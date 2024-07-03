@@ -37,6 +37,8 @@ impl Handler {
     }
 
     fn handle_start_event(&mut self, line: Line2D) {
+        self.sweep_line.set_x(*line.start.x);
+
         self.sweep_line.add(line);
         let neighbors = self.sweep_line.get_neighbors(&line);
 
@@ -55,6 +57,8 @@ impl Handler {
     }
 
     fn handle_end_event(&mut self, line: Line2D) {
+        self.sweep_line.set_x(*line.end.x);
+
         let neighbors = self.sweep_line.get_neighbors(&line);
         self.sweep_line.remove(&line);
 
@@ -67,18 +71,29 @@ impl Handler {
     }
 
     fn handle_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
+        // small shift to the right to calculate order behind intersection
+        self.sweep_line.set_x(*intersection.point.x + f64::EPSILON);
+
+        // add intersection to the list
         self.intersections.insert(intersection);
-        self.sweep_line.swap(&smaller, &bigger);
+
 
         let above = self.sweep_line.get_neighbors(&smaller).bigger;
         let below = self.sweep_line.get_neighbors(&bigger).smaller;
 
+        // segE1: bigger
+        // segE2: smaller
+        // segA: above
+        // segB: below
+
+        // if intersection segE2 with segA
         if let Some(above) = above {
             let intersection_point = above.find_intersection(smaller);
             if let Some(intersection) = intersection_point {
                 self.add_intersection_event(intersection, above, smaller);
             }
         }
+        // if intersection segE1 with segB
         if let Some(below) = below {
             let intersection_point = below.find_intersection(bigger);
             if let Some(intersection) = intersection_point {
@@ -128,16 +143,16 @@ mod tests {
 
     #[test]
     fn test_multiple_intersections() {
-        let line1 = Line2D::new(0.0, 2.0, 6.0, 2.0);
-        let line2 = Line2D::new(1.0, 1.0, 4.0, 4.0);
-        let line3 = Line2D::new(1.5, 3.5, 5.0, 0.0);
+        let line1 = Line2D::new(0.0, 2.0, 10.0, 2.0);
+        let line2 = Line2D::new(2.0, 0.0, 8.0, 6.0);
+        let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
         let mut handler = Handler::new(vec![line1, line2, line3]);
 
         handler.run();
 
-        let intersection1 = Intersection { point: Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) }, line1, line2 };
-        let intersection2 = Intersection { point: Point2D { x: OrderedFloat(2.5), y: OrderedFloat(2.5) }, line1: line2, line2: line3 };
-        let intersection3 = Intersection { point: Point2D { x: OrderedFloat(3.0), y: OrderedFloat(2.0) }, line1, line2: line3 };
+        let intersection1 = Intersection { point: Point2D { x: OrderedFloat(4.0), y: OrderedFloat(2.0) }, line1, line2 };
+        let intersection2 = Intersection { point: Point2D { x: OrderedFloat(5.5), y: OrderedFloat(3.5) }, line1: line2, line2: line3 };
+        let intersection3 = Intersection { point: Point2D { x: OrderedFloat(7.0), y: OrderedFloat(2.0) }, line1, line2: line3 };
 
 
         assert_eq!(handler.intersections.len(), 3);

@@ -136,6 +136,24 @@ impl Line2D {
         }
     }
 
+    pub fn y_at(&self, x: f64) -> Option<f64> {
+        if self.start.x == self.end.x {
+            // Vertical line, return y1 if x matches
+            if x == *self.start.x {
+                Some(*self.start.y)
+            } else {
+                None
+            }
+        } else {
+            let t = (x - *self.start.x) / (*self.end.x - *self.start.x);
+            if t >= 0.0 && t <= 1.0 {
+                Some(*self.start.y + t * (*self.end.y - *self.start.y))
+            } else {
+                None
+            }
+        }
+    }
+
     /// Calculates whether two colinear lines overlap.
     fn parametric_overlap(&self, other: &Line2D) -> bool {
         if self.is_zero_length() {
