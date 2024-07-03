@@ -20,7 +20,7 @@ function [center, radius] = max_inscribed_circle(vertices)
     n = size(vertices, 1);
     
     % Zielfunktion: maximize radius, ignore x and y
-    f = [0; 0; -1];
+    f = [0; 0; 1];
     
     % Initialize constraint arrays
     A = [];
@@ -61,6 +61,8 @@ function [center, radius] = max_inscribed_circle(vertices)
         % n_x * x + n_y * y - r <= n_x*p_x + n_y * p_y
 
         b_i = n_x * p_x + n_y * p_y;
+
+        fprintf('%f * x + %f * y - r <= %.1f\n', n_x, n_y, b_i);
 
         A = [A; n_x, n_y, -1];
         b = [b; b_i];
