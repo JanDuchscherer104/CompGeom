@@ -19,8 +19,8 @@ plot_result(vertices, center, radius);
 function [center, radius] = max_inscribed_circle(vertices)
     n = size(vertices, 1);
     
-    % Function coefficients: maximize radius, ignore x and y
-    c = [0; 0; -1];
+    % Zielfunktion: maximize radius, ignore x and y
+    f = [0; 0; -1];
     
     % Initialize constraint arrays
     A = [];
@@ -50,10 +50,25 @@ function [center, radius] = max_inscribed_circle(vertices)
             normal = -normal;
         end
         
-        % Add the constraint: normal * (x, y) - r >= normal * vertex_i
-        A(i, :) = [normal, -1];
-        b(i) = dot(normal, vertices(i, :));
+        n_x = normal(1);
+        n_y = normal(2);
+        p_x = vertices(i,1);
+        p_y = vertices(i,2);
+
+        % distance >= r
+        % distance = dot(normal, (center-point))
+        % n_x * (x - p_x) + n_y * (y - p_y) >= r
+        % n_x * x + n_y * y - r <= n_x*p_x + n_y * p_y
+
+        b_i = n_x * p_x + n_y * p_y;
+
+        A = [A; n_x, n_y, -1];
+        b = [b; b_i];
+
     end
+
+    disp(A);
+    disp(b);
 
     verify_normals(vertices, A);
     
@@ -71,7 +86,7 @@ function [center, radius] = max_inscribed_circle(vertices)
     ub = [max_x; max_y; max_radius];
     
     options = optimoptions('linprog', 'Display', 'off');
-    [solution, ~, exitflag, output] = linprog(c, A, b, [], [], lb, ub, options);
+    [solution, ~, exitflag, output] = linprog(f, A, b, [], [], lb, ub, options);
     
     if exitflag > 0
         center = solution(1:2);
