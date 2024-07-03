@@ -72,7 +72,7 @@ impl Handler {
 
     fn handle_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
         // small shift to the right to calculate order behind intersection
-        self.sweep_line.set_x(*intersection.point.x + f64::EPSILON);
+        self.sweep_line.set_x(*intersection.point.x + f64::EPSILON + 0.1);
 
         // add intersection to the list
         self.intersections.insert(intersection);

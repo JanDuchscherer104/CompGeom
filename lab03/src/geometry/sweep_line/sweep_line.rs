@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::BTreeSet;
 use std::rc::Rc;
 use ordered_float::OrderedFloat;
 use crate::geometry::line::Line2D;
@@ -53,29 +52,37 @@ pub struct Neighbors {
 
 #[derive(Debug)]
 pub struct SweepLine {
-    lines: BTreeSet<OrderedLine>,
+    lines: Vec<OrderedLine>,
     x: Rc<RefCell<f64>>,
 }
 
+/// Implementation of SweepLine structure
+/// Current implementation is not optimal as it sorts the lines every time x is updated
 impl SweepLine {
     pub fn new() -> Self {
         SweepLine {
-            lines: BTreeSet::new(),
+            lines: Vec::new(),
             x: Rc::new(RefCell::new(f64::NEG_INFINITY))
         }
     }
 
     pub fn set_x(&mut self, x: f64) {
         *self.x.borrow_mut() = x;
+        self.lines.sort();
     }
 
     pub fn add(&mut self, line: Line2D) {
-        self.lines.insert(OrderedLine::new(line, self.x.clone()));
+        self.lines.push(OrderedLine::new(line, self.x.clone()));
+        self.lines.sort();
     }
 
     pub fn remove(&mut self, line: &Line2D) -> bool {
         if let Some(ordered_line) = self.find_ordered_line(line).cloned() {
-            self.lines.remove(&ordered_line)
+            // get index of ordered line
+            let index = self.lines.iter().position(|ol| ol == &ordered_line).unwrap();
+            self.lines.remove(index);
+            self.lines.sort();
+            true
         } else {
             false
         }
@@ -108,6 +115,17 @@ impl SweepLine {
     pub fn contains(&self, line: &Line2D) -> bool {
         let ordered_line = OrderedLine::new(line.clone(), self.x.clone());
         self.lines.contains(&ordered_line)
+    }
+
+    pub fn print_lines(&self) {
+        println!("Line Order @ {}", self.x.borrow());
+        for ol in &self.lines {
+            println!("\t{} @ {} = {}", ol.value, self.x.borrow(), ol.value.y_at(self.x.borrow().clone()).unwrap());
+        }
+    }
+    
+    pub fn get_sorted_lines(&self) -> Vec<OrderedLine> {
+        self.lines.iter().cloned().collect()
     }
 
     fn find_ordered_line(&self, line: &Line2D) -> Option<&OrderedLine> {
@@ -151,7 +169,6 @@ mod tests {
         assert!(ordered_line1 > ordered_line2);
     }
 
-
     #[test]
     fn add_and_remove_lines() {
         let line1 = Line2D::new(0.0, 1.0, 2.0, 2.0);
@@ -168,6 +185,43 @@ mod tests {
         sweepline.remove(&line1);
         assert!(!sweepline.contains(&line1));
         assert!(sweepline.contains(&line2));
+    }
+
+    #[test]
+    fn sweep_line_should_be_sorted() {
+        let line1 = Line2D::new(0.0, 0.0, 10.0, 5.0);
+        let line2 = Line2D::new(0.0, 2.0, 10.0, 2.0);
+        let line3 = Line2D::new(0.0, 5.0, 10.0, 0.0);
+
+        let mut sweep_line = SweepLine::new();
+        sweep_line.set_x(0.0);
+
+        sweep_line.add(line1.clone());
+        sweep_line.add(line2.clone());
+        sweep_line.add(line3.clone());
+
+        let sorted_lines = sweep_line.get_sorted_lines();
+        assert_eq!(sorted_lines[0].value, line1);
+        assert_eq!(sorted_lines[1].value, line2);
+        assert_eq!(sorted_lines[2].value, line3);
+
+        sweep_line.set_x(4.1);
+        let sorted_lines = sweep_line.get_sorted_lines();
+        assert_eq!(sorted_lines[0].value, line2);
+        assert_eq!(sorted_lines[1].value, line1);
+        assert_eq!(sorted_lines[2].value, line3);
+
+        sweep_line.set_x(5.1);
+        let sorted_lines = sweep_line.get_sorted_lines();
+        assert_eq!(sorted_lines[0].value, line2);
+        assert_eq!(sorted_lines[1].value, line3);
+        assert_eq!(sorted_lines[2].value, line1);
+
+        sweep_line.set_x(6.1);
+        let sorted_lines = sweep_line.get_sorted_lines();
+        assert_eq!(sorted_lines[0].value, line3);
+        assert_eq!(sorted_lines[1].value, line2);
+        assert_eq!(sorted_lines[2].value, line1);
     }
 
     #[test]
