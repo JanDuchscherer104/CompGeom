@@ -17,10 +17,16 @@ fprintf('Radius: %f\n', radius);
 plot_result(vertices, center, radius);
 
 function [center, radius] = max_inscribed_circle(vertices)
-    n = size(vertices, 1);
+    % Normalize the polygon
+    min_coords = min(vertices);
+    max_coords = max(vertices);
+    scale = max(max_coords - min_coords);
+    normalized_vertices = (vertices - min_coords) / scale;
+    
+    n = size(normalized_vertices, 1);
     
     % Zielfunktion: maximize radius, ignore x and y
-    f = [0; 0; 1];
+    f = [0; 0; -1];
     
     % Initialize constraint arrays
     A = [];
@@ -29,70 +35,37 @@ function [center, radius] = max_inscribed_circle(vertices)
     for i = 1:n
         j = mod(i, n) + 1;  % Next vertex (wrap around)
         
-        % edge vector
-        edge = vertices(j, :) - vertices(i, :);
-        
-        % normal vector
+        edge = normalized_vertices(j, :) - normalized_vertices(i, :);
         normal = [-edge(2), edge(1)];
-        
-        % normalize the normal vector
-        normal_length = norm(normal);
-        if normal_length < eps
-            warning('Edge %d has zero length. Skipping this constraint.', i);
-            continue;
-        end
-        normal = normal / normal_length;
+        normal = normal / norm(normal);
         
         % Ensure the normal points inward
-        midpoint = (vertices(i, :) + vertices(j, :)) / 2;
-        test_point = midpoint + normal * 0.1;
-        if ~inpolygon(test_point(1), test_point(2), vertices(:,1), vertices(:,2))
+        midpoint = (normalized_vertices(i, :) + normalized_vertices(j, :)) / 2;
+        test_point = midpoint + normal * 0.01;
+        if ~inpolygon(test_point(1), test_point(2), normalized_vertices(:,1), normalized_vertices(:,2))
             normal = -normal;
         end
         
-        n_x = normal(1);
-        n_y = normal(2);
-        p_x = vertices(i,1);
-        p_y = vertices(i,2);
+        p = normalized_vertices(i,:);
 
-        % distance >= r
-        % distance = dot(normal, (center-point))
-        % n_x * (x - p_x) + n_y * (y - p_y) >= r
-        % n_x * x + n_y * y - r <= n_x*p_x + n_y * p_y
-
-        b_i = n_x * p_x + n_y * p_y;
-
-        fprintf('%f * x + %f * y - r <= %.1f\n', n_x, n_y, b_i);
-
-        A = [A; n_x, n_y, -1];
-        b = [b; b_i];
-
+        % Add constraint: normal * (x - p) >= r
+        A = [A; -normal, 1];
+        b = [b; -normal * p'];
     end
 
-    disp(A);
-    disp(b);
-
-    verify_normals(vertices, A);
+    % verify_normals(vertices, A);
     
-    % bounding box as lower and upper bounds
-    max_x = max(vertices(:,1));
-    min_x = min(vertices(:,1));
-    max_y = max(vertices(:,2));
-    min_y = min(vertices(:,2));
-    max_radius = min(max_x - min_x, max_y - min_y) / 2;
-
-    fprintf("Bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
-
-    
-    lb = [min_x; min_y; 0];
-    ub = [max_x; max_y; max_radius];
+    % Bounding box constraints
+    lb = [0; 0; 0];
+    ub = [1; 1; 0.5];  % Max radius can't be more than half the unit square
     
     options = optimoptions('linprog', 'Display', 'off');
     [solution, ~, exitflag, output] = linprog(f, A, b, [], [], lb, ub, options);
     
     if exitflag > 0
-        center = solution(1:2);
-        radius = solution(3);
+        % Denormalize the solution
+        center = solution(1:2) * scale + min_coords;
+        radius = solution(3) * scale;
     else
         fprintf('Linear programming problem could not be solved.\n');
         fprintf('Exit flag: %d\n', exitflag);
