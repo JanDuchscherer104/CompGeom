@@ -115,17 +115,22 @@ impl Handler {
         self.queue.add(Event::IntersectionEvent { intersection, smaller, bigger });
     }
 
-    /// Check if lines have identical x coordinates
+    /// Check if line start/end have identical x coordinates. Covers vertical lines as well.
     /// Panics if they do
     /// Complexity: O(n)
     fn sanity_checks(&self, lines: Vec<Line2D>) {
         let mut x_coords = HashSet::new();
         for line in &lines {
-            if x_coords.contains(&(line.start.x)) || x_coords.contains(&(line.end.x)) {
+            if x_coords.contains(&(line.start.x)) {
                 panic!("Lines have identical x coordinates");
+            } else {
+                x_coords.insert(line.start.x);
             }
-            x_coords.insert(line.start.x);
-            x_coords.insert(line.end.x);
+            if x_coords.contains(&(line.end.x)) {
+                panic!("Lines have identical x coordinates");
+            } else {
+                x_coords.insert(line.end.x);
+            }
         }
     }
 }
@@ -180,8 +185,17 @@ mod tests {
 
     #[test]
     fn should_panic_when_lines_have_identical_x_coordinates() {
-        let line1 = Line2D::new(0.0, 2.0, 1.0, 2.0);
+        let line1 = Line2D::new(0.0, 2.0, 0.0, 10.0);
         let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
+        let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
+
+        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
+    }
+
+    #[test]
+    fn should_panic_when_lines_are_vertical() {
+        let line1 = Line2D::new(1.0, 0.0, 1.0, 2.0);
+        let line2 = Line2D::new(0.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
         assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
