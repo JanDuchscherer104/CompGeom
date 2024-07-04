@@ -13,10 +13,10 @@ struct Handler {
 }
 
 impl Handler {
-    pub fn new(lines: Vec<Line2D>) -> Self {
+    pub fn new(mut lines: Vec<Line2D>) -> Self {
+        Self::sanity_checks(&mut lines);
         let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new() };
 
-        handler.sanity_checks(lines);
         handler
     }
 
@@ -115,12 +115,20 @@ impl Handler {
         self.queue.add(Event::IntersectionEvent { intersection, smaller, bigger });
     }
 
-    /// Check if line start/end have identical x coordinates. Covers vertical lines as well.
-    /// Panics if they do
+    /// Performs sanity checks on the input lines
+    /// Covers the following cases:
+    ///   - lines with zero length -> remove them
+    ///   - lines with identical x coordinates -> panic
+    ///   - vertical lines -> panic
     /// Complexity: O(n)
-    fn sanity_checks(&self, lines: Vec<Line2D>) {
+    fn sanity_checks(lines: &mut Vec<Line2D>) {
         let mut x_coords = HashSet::new();
-        for line in &lines {
+
+        lines.retain(|line| {
+            if line.is_zero_length() {
+                return false;
+            }
+
             if x_coords.contains(&(line.start.x)) {
                 panic!("Lines have identical x coordinates");
             } else {
@@ -131,7 +139,8 @@ impl Handler {
             } else {
                 x_coords.insert(line.end.x);
             }
-        }
+            return true;
+        });
     }
 }
 
@@ -199,5 +208,19 @@ mod tests {
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
         assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
+    }
+
+    #[test]
+    fn should_ignore_lines_with_length_zero() {
+        let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
+        let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
+        let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
+
+        let mut handler = Handler::new(vec![line1, line2, line3]);
+
+        let queue = &handler.queue;
+
+        // start and end events for line2 and line3
+        assert_eq!(queue.len(), 4);
     }
 }
