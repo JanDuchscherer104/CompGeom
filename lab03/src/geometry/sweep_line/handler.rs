@@ -14,7 +14,10 @@ struct Handler {
 
 impl Handler {
     pub fn new(lines: Vec<Line2D>) -> Self {
-        Handler { queue: EventQueue::new(lines), sweep_line: SweepLine::new(), intersections: HashSet::new() }
+        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new() };
+
+        handler.sanity_checks(lines);
+        handler
     }
 
     pub fn run(&mut self) {
@@ -111,6 +114,20 @@ impl Handler {
 
         self.queue.add(Event::IntersectionEvent { intersection, smaller, bigger });
     }
+
+    /// Check if lines have identical x coordinates
+    /// Panics if they do
+    /// Complexity: O(n)
+    fn sanity_checks(&self, lines: Vec<Line2D>) {
+        let mut x_coords = HashSet::new();
+        for line in &lines {
+            if x_coords.contains(&(line.start.x)) || x_coords.contains(&(line.end.x)) {
+                panic!("Lines have identical x coordinates");
+            }
+            x_coords.insert(line.start.x);
+            x_coords.insert(line.end.x);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -159,5 +176,14 @@ mod tests {
         assert!(handler.intersections.iter().any(|i| i.point == intersection1.point));
         assert!(handler.intersections.iter().any(|i| i.point == intersection2.point));
         assert!(handler.intersections.iter().any(|i| i.point == intersection3.point));
+    }
+
+    #[test]
+    fn should_panic_when_lines_have_identical_x_coordinates() {
+        let line1 = Line2D::new(0.0, 2.0, 1.0, 2.0);
+        let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
+        let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
+
+        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
     }
 }
