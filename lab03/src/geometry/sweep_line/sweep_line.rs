@@ -36,10 +36,17 @@ impl PartialOrd for OrderedLine {
 
 impl Ord for OrderedLine {
     fn cmp(&self, other: &Self) -> Ordering {
-        let y_self = OrderedFloat::from(self.value.y_at(self.x.borrow().clone()).expect("Can't calculate y at x"));
-        let y_other = OrderedFloat::from(other.value.y_at(other.x.borrow().clone()).expect("Cant calculate y at x"));
+        let y_self = self.value.y_at(self.x.borrow().clone());
+        let y_other = other.value.y_at(other.x.borrow().clone());
 
-        y_self.cmp(&y_other)
+        if y_self.is_none(){
+            panic!("Cant calculate y value for the line {} at x = {}", self.value, self.x.borrow());
+       }
+        if y_other.is_none(){
+            panic!("Cant calculate y value for the line {} at x = {}", other.value, self.x.borrow());
+        }
+
+        OrderedFloat::from(y_self.unwrap()).cmp(&OrderedFloat::from(y_other.unwrap()))
     }
 }
 
