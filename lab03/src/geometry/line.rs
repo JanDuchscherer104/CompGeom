@@ -27,6 +27,10 @@ impl Line2D {
         self.start  == self.end
     }
 
+    pub fn is_vertical(&self) -> bool {
+        self.start.x == self.end.x
+    }
+
     pub fn contains(&self, point: Point2D) -> bool {
         let dx = self.end.x - self.start.x;
         let dy = self.end.y - self.start.y;
