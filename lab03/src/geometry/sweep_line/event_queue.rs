@@ -37,6 +37,12 @@ impl EventQueue {
     pub fn len(&self) -> usize {
         self.events.len()
     }
+
+    pub fn print_queue(&self) {
+        for event in &self.events {
+            println!("{}", event);
+        }
+    }
 }
 
 #[cfg(test)]
