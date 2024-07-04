@@ -3,6 +3,7 @@ use std::{
     io::{self, BufRead},
     path::Path,
 };
+use ordered_float::OrderedFloat;
 
 use super::line::Line2D;
 
@@ -25,7 +26,16 @@ impl LineSegments2D {
                         .map(|num| num.parse::<f64>().unwrap())
                         .collect();
                     if nums.len() == 4 {
-                        Ok(Line2D::new(nums[0], nums[1], nums[2], nums[3]))
+                        let x1 = nums[0];
+                        let y1 = nums[1];
+                        let x2 = nums[2];
+                        let y2 = nums[3];
+
+                        if (OrderedFloat(x1) < OrderedFloat(x2)) {
+                            Ok(Line2D::new(x1,y1, x2, y2))
+                        } else {
+                            Ok(Line2D::new(x2,y2, x1, y1))
+                        }
                     } else {
                         Err(io::Error::new(
                             io::ErrorKind::InvalidData,
