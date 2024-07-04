@@ -75,7 +75,7 @@ impl Handler {
 
     fn handle_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
         // small shift to the right to calculate order behind intersection
-        self.sweep_line.set_x(*intersection.point.x + f64::EPSILON + 0.1);
+        self.sweep_line.set_x(*intersection.point.x + 0.00000001 );
 
         // add intersection to the list
         self.intersections.insert(intersection);
@@ -222,5 +222,17 @@ mod tests {
 
         // start and end events for line2 and line3
         assert_eq!(queue.len(), 4);
+    }
+
+    #[test]
+    fn should_panic_when_multiple_intersections_at_same_point() {
+        let line1 = Line2D::new(0.0, 0.0, 10.0, 10.0);
+        let line2 = Line2D::new(9.0, 9.0, 1.0, 1.0);
+        let line3 = Line2D::new(2.0, 5.0, 8.0, 5.0);
+
+        assert!(std::panic::catch_unwind(|| {
+            let mut handler = Handler::new(vec![line1, line2, line3]);
+            handler.run();
+        }).is_err());
     }
 }
