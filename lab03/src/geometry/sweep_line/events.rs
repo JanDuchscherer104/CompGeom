@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 
@@ -43,6 +44,23 @@ impl Ord for Event {
             (Event::IntersectionEvent { intersection: i1, .. }, Event::IntersectionEvent { intersection: i2, .. }) => i1.point.cmp(&i2.point),
             (Event::IntersectionEvent { intersection: i1, .. }, Event::StartEvent { line: start }) => i1.point.cmp(&start.start),
             (Event::IntersectionEvent { intersection: i1, .. }, Event::EndEvent { line: end }) => i1.point.cmp(&end.end),
+        }
+    }
+}
+
+impl Display for Event {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match (self) {
+            Event::StartEvent { line } => {
+                write!(f, "StartEvent at x={}\t| Line: {}", line.start.x, line)
+            },
+            Event::EndEvent { line } => {
+                write!(f,"EndEvent at x={}\t| Line: {}", line.end.x, line)
+
+            },
+            Event::IntersectionEvent { intersection, smaller, bigger } => {
+                write!(f, "IntersectionEvent between at x={}\t| Lines: {} and {}", intersection.point.x, smaller, bigger)
+            }
         }
     }
 }
