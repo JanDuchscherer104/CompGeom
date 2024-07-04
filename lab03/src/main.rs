@@ -1,14 +1,18 @@
 use utils::get_dat_paths;
 use geometry::line_segments::LineSegments2D;
+use geometry::sweep_line::handler::Handler;
+use crate::geometry::sweep_line::handler::SweepLineOptions;
 
 mod geometry;
 mod utils;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let paths = get_dat_paths("data")?;
-    for path in paths {
-        let lines = LineSegments2D::from_dat(&path)?;
-        println!("{:?}", lines);
-    }
+
+    let lines = LineSegments2D::from_dat(&paths[3])?;
+    // println!("{:?}", lines);
+    let mut handler = Handler::new(lines.lines, SweepLineOptions::panic_disabled());
+    handler.run();
+
     Ok(())
 }

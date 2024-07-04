@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use log::warn;
+use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::point::Point2D;
@@ -6,16 +8,41 @@ use crate::geometry::sweep_line::event_queue::EventQueue;
 use crate::geometry::sweep_line::events::Event;
 use crate::geometry::sweep_line::sweep_line::SweepLine;
 
-struct Handler {
+/// Options for the sweep line algorithm
+/// panic_on_identical_x: if true, the algorithm will panic if two lines have the same x coordinate, otherwise it will ignore the line
+/// panic_on_vertical: if true, the algorithm will panic if a vertical line is encountered, otherwise it will ignore the line
+/// panic_on_zero_length: if true, the algorithm will panic if a line has zero length, otherwise it will ignore the line
+pub struct SweepLineOptions {
+    pub panic_on_identical_x: bool,
+    pub panic_on_vertical: bool,
+    pub panic_on_zero_length: bool,
+    pub x_shift: f64
+}
+
+impl SweepLineOptions {
+    /// Enables panicking if a requirement is not met.
+    pub fn panic_enabled() -> Self {
+        SweepLineOptions { panic_on_identical_x: true, panic_on_vertical: true, panic_on_zero_length: true, x_shift: f64::EPSILON }
+    }
+
+    /// Avoid panicking, instead try to fix the input.
+    /// This might lead to incorrect results.
+    pub fn panic_disabled() -> Self {
+        SweepLineOptions { panic_on_identical_x: false, panic_on_vertical: false, panic_on_zero_length: false, x_shift: 0.000001 }
+    }
+}
+
+pub struct Handler {
     queue: EventQueue,
     sweep_line: SweepLine,
     intersections: HashSet<Intersection>,
+    options: SweepLineOptions
 }
 
 impl Handler {
-    pub fn new(mut lines: Vec<Line2D>) -> Self {
-        Self::sanity_checks(&mut lines);
-        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new() };
+    pub fn new(mut lines: Vec<Line2D>, options: SweepLineOptions) -> Self {
+        lines = Self::sanity_checks(&mut lines, &options);
+        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new(), options };
 
         handler
     }
@@ -75,19 +102,14 @@ impl Handler {
 
     fn handle_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
         // small shift to the right to calculate order behind intersection
-        self.sweep_line.set_x(*intersection.point.x + 0.00000001 );
+        self.sweep_line.set_x(*intersection.point.x + self.options.x_shift );
 
         // add intersection to the list
         self.intersections.insert(intersection);
 
-
         let above = self.sweep_line.get_neighbors(&smaller).bigger;
         let below = self.sweep_line.get_neighbors(&bigger).smaller;
 
-        // segE1: bigger
-        // segE2: smaller
-        // segA: above
-        // segB: below
 
         // if intersection segE2 with segA
         if let Some(above) = above {
@@ -121,26 +143,57 @@ impl Handler {
     ///   - lines with identical x coordinates -> panic
     ///   - vertical lines -> panic
     /// Complexity: O(n)
-    fn sanity_checks(lines: &mut Vec<Line2D>) {
+    fn sanity_checks(lines: &mut Vec<Line2D>, options: &SweepLineOptions) -> Vec<Line2D> {
         let mut x_coords = HashSet::new();
 
-        lines.retain(|line| {
+        let res = lines.clone()
+            .into_iter()
+            .filter_map(|mut line| {
             if line.is_zero_length() {
-                return false;
+                if options.panic_on_zero_length {
+                    panic!("Zero length line detected: {}", line);
+                } else {
+                    warn!("Zero length line detected, ignoring line: {}", line);
+                    return None;
+                }
+            }
+            if line.is_vertical() {
+                if options.panic_on_vertical {
+                    panic!("Vertical line detected");
+                } else {
+                    // warn!("Vertical line detected, shifting x coordinate slightly");
+                    // line.end.x = line.end.x + options.x_shift;
+                    warn!("Vertical line detected, ignoring line: {}", line);
+                    return None;
+                }
             }
 
             if x_coords.contains(&(line.start.x)) {
-                panic!("Lines have identical x coordinates");
-            } else {
-                x_coords.insert(line.start.x);
+                if options.panic_on_identical_x {
+                    panic!("Lines have identical x coordinates: {}", line.start.x);
+                } else {
+                    // warn!("Duplicate x value detected, shifting start x coordinate of {} slightly", line);
+                    // line.start.x = line.start.x + options.x_shift;
+                    warn!("Duplicate x value detected, ignoring line: {}", line);
+                    return None;
+                }
             }
+            x_coords.insert(line.start.x);
+
             if x_coords.contains(&(line.end.x)) {
-                panic!("Lines have identical x coordinates");
-            } else {
-                x_coords.insert(line.end.x);
+                if options.panic_on_identical_x {
+                    panic!("Lines have identical x coordinates: {}", line.end.x);
+                } else {
+                    // warn!("Duplicate x value detected, shifting end x coordinate  of {} slightly", line);
+                    // line.end.x = line.end.x + options.x_shift;
+                    warn!("Duplicate x value detected, ignoring line: {}", line);
+                    return None;
+                }
             }
-            return true;
-        });
+            Some(line)
+        }).collect();
+
+        res
     }
 }
 
@@ -149,11 +202,15 @@ mod tests {
     use super::*;
     use ordered_float::OrderedFloat;
 
+    fn get_options_to_panic() -> SweepLineOptions {
+        SweepLineOptions::panic_enabled()
+    }
+
     #[test]
     fn test_intersection_in_middle() {
         let line1 = Line2D::new(1.0, 1.0, 4.0, 4.0);
         let line2 = Line2D::new(2.0, 3.0, 3.0, 2.0);
-        let mut handler = Handler::new(vec![line1, line2]);
+        let mut handler = Handler::new(vec![line1, line2], get_options_to_panic());
 
         handler.run();
         let intersection = Point2D { x: OrderedFloat(2.5), y: OrderedFloat(2.5) };
@@ -165,7 +222,7 @@ mod tests {
     fn test_no_intersection() {
         let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
         let line2 = Line2D::new(3.0, 3.0, 4.0, 4.0);
-        let mut handler = Handler::new(vec![line1, line2]);
+        let mut handler = Handler::new(vec![line1, line2], get_options_to_panic());
 
         handler.run();
 
@@ -177,7 +234,7 @@ mod tests {
         let line1 = Line2D::new(0.0, 2.0, 10.0, 2.0);
         let line2 = Line2D::new(2.0, 0.0, 8.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
-        let mut handler = Handler::new(vec![line1, line2, line3]);
+        let mut handler = Handler::new(vec![line1, line2, line3], SweepLineOptions::panic_disabled());
 
         handler.run();
 
@@ -198,7 +255,7 @@ mod tests {
         let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
+        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3], get_options_to_panic())).is_err());
     }
 
     #[test]
@@ -207,7 +264,7 @@ mod tests {
         let line2 = Line2D::new(0.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3])).is_err());
+        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3], get_options_to_panic())).is_err());
     }
 
     #[test]
@@ -216,7 +273,7 @@ mod tests {
         let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        let mut handler = Handler::new(vec![line1, line2, line3]);
+        let mut handler = Handler::new(vec![line1, line2, line3], SweepLineOptions::panic_disabled());
 
         let queue = &handler.queue;
 
@@ -231,7 +288,7 @@ mod tests {
         let line3 = Line2D::new(2.0, 5.0, 8.0, 5.0);
 
         assert!(std::panic::catch_unwind(|| {
-            let mut handler = Handler::new(vec![line1, line2, line3]);
+            let mut handler = Handler::new(vec![line1, line2, line3], get_options_to_panic());
             handler.run();
         }).is_err());
     }
