@@ -132,8 +132,13 @@ impl Line2D {
 
         if ccw1 == 0.0 && ccw2 == 0.0 {
             // They are colinear -> check whether they overlap
-            // self.parametric_overlap(&other)
-            self.bbox_overlap(&other)
+            // quickly check if bounding boxes overlap, then check parametric overlap
+            if self.bbox_overlap(&other) {
+                // script says parametric_overlap, but shouldn't bbox overlap be enough?
+                self.parametric_overlap(&other)
+            } else {
+                false
+            }
         } else {
             // If line segments straddle each other, they intersect
             ccw1 * ccw2 <= OrderedFloat::from(0.0) && ccw3 * ccw4 <= OrderedFloat::from(0.0)
@@ -421,7 +426,7 @@ mod tests {
     #[test]
     fn zero_length_and_non_zero_length_that_dont_intersect() {
         let line1 = Line2D::new(0.0, 0.0, 0.0, 0.0);
-        let line2 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(1.0, 1.0, 10.0, 9.0);
 
         let result: bool = line1.intersects(line2);
 
@@ -434,6 +439,17 @@ mod tests {
         // bug from file s_1000_1.dat that was indicating a wrong intersection
         let line1 = Line2D::new(10.0, 10.0, 10.0, 10.0);
         let line2 = Line2D::new(31.498, 9.526, 31.8858, 10.3111);
+
+        let result: bool = line1.intersects(line2);
+
+        assert!(!result);
+        assert_eq!(result, intersect_using_external_library(line1, line2))
+    }
+
+    #[test]
+    fn parallel_lines_dont_intersect_with_overlapping_bbox() {
+        let line1 = Line2D::new(0.0, 0.0, 10.0, 10.0);
+        let line2 = Line2D::new(1.0, 0.0, 10.0, 9.0);
 
         let result: bool = line1.intersects(line2);
 
