@@ -131,8 +131,8 @@ impl SweepLine {
         }
     }
     
-    pub fn get_sorted_lines(&self) -> Vec<OrderedLine> {
-        self.lines.iter().cloned().collect()
+    pub fn get_sorted_lines(&self) -> Vec<Line2D> {
+        self.lines.iter().cloned().map(|line| line.value).collect()
     }
 
     fn find_ordered_line(&self, line: &Line2D) -> Option<&OrderedLine> {
@@ -208,27 +208,27 @@ mod tests {
         sweep_line.add(line3.clone());
 
         let sorted_lines = sweep_line.get_sorted_lines();
-        assert_eq!(sorted_lines[0].value, line1);
-        assert_eq!(sorted_lines[1].value, line2);
-        assert_eq!(sorted_lines[2].value, line3);
+        assert_eq!(sorted_lines[0], line1);
+        assert_eq!(sorted_lines[1], line2);
+        assert_eq!(sorted_lines[2], line3);
 
         sweep_line.set_x(4.1);
         let sorted_lines = sweep_line.get_sorted_lines();
-        assert_eq!(sorted_lines[0].value, line2);
-        assert_eq!(sorted_lines[1].value, line1);
-        assert_eq!(sorted_lines[2].value, line3);
+        assert_eq!(sorted_lines[0], line2);
+        assert_eq!(sorted_lines[1], line1);
+        assert_eq!(sorted_lines[2], line3);
 
         sweep_line.set_x(5.1);
         let sorted_lines = sweep_line.get_sorted_lines();
-        assert_eq!(sorted_lines[0].value, line2);
-        assert_eq!(sorted_lines[1].value, line3);
-        assert_eq!(sorted_lines[2].value, line1);
+        assert_eq!(sorted_lines[0], line2);
+        assert_eq!(sorted_lines[1], line3);
+        assert_eq!(sorted_lines[2], line1);
 
         sweep_line.set_x(6.1);
         let sorted_lines = sweep_line.get_sorted_lines();
-        assert_eq!(sorted_lines[0].value, line3);
-        assert_eq!(sorted_lines[1].value, line2);
-        assert_eq!(sorted_lines[2].value, line1);
+        assert_eq!(sorted_lines[0], line3);
+        assert_eq!(sorted_lines[1], line2);
+        assert_eq!(sorted_lines[2], line1);
     }
 
     #[test]

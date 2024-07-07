@@ -31,7 +31,7 @@ impl LineSegments2D {
                         let x2 = nums[2];
                         let y2 = nums[3];
 
-                        if (OrderedFloat(x1) < OrderedFloat(x2)) {
+                        if OrderedFloat(x1) < OrderedFloat(x2) {
                             Ok(Line2D::new(x1,y1, x2, y2))
                         } else {
                             Ok(Line2D::new(x2,y2, x1, y1))

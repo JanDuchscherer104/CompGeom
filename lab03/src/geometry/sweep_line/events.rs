@@ -50,7 +50,7 @@ impl Ord for Event {
 
 impl Display for Event {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match (self) {
+        match self {
             Event::StartEvent { line } => {
                 write!(f, "StartEvent at x={}\t| Line: {}", line.start.x, line)
             },

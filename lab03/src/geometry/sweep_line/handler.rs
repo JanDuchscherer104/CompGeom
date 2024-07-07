@@ -1,6 +1,4 @@
 use std::collections::HashSet;
-use log::warn;
-use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::point::Point2D;
@@ -149,12 +147,12 @@ impl Handler {
 
         let res = lines.clone()
             .into_iter()
-            .filter_map(|mut line| {
+            .filter_map(|line| {
             if line.is_zero_length() {
                 if options.panic_on_zero_length {
                     panic!("Zero length line detected: {}", line);
                 } else {
-                    warn!("Zero length line detected, ignoring line: {}", line);
+                    eprintln!("Zero length line detected, ignoring line: {}", line);
                     return None;
                 }
             }
@@ -162,9 +160,9 @@ impl Handler {
                 if options.panic_on_vertical {
                     panic!("Vertical line detected");
                 } else {
-                    // warn!("Vertical line detected, shifting x coordinate slightly");
+                    // eprintln!("Vertical line detected, shifting x coordinate slightly");
                     // line.end.x = line.end.x + options.x_shift;
-                    warn!("Vertical line detected, ignoring line: {}", line);
+                    eprintln!("Vertical line detected, ignoring line: {}", line);
                     return None;
                 }
             }
@@ -173,9 +171,9 @@ impl Handler {
                 if options.panic_on_identical_x {
                     panic!("Lines have identical x coordinates: {}", line.start.x);
                 } else {
-                    // warn!("Duplicate x value detected, shifting start x coordinate of {} slightly", line);
+                    // eprintln!("Duplicate x value detected, shifting start x coordinate of {} slightly", line);
                     // line.start.x = line.start.x + options.x_shift;
-                    warn!("Duplicate x value detected, ignoring line: {}", line);
+                    eprintln!("Duplicate x value detected, ignoring line: {}", line);
                     return None;
                 }
             }
@@ -185,9 +183,9 @@ impl Handler {
                 if options.panic_on_identical_x {
                     panic!("Lines have identical x coordinates: {}", line.end.x);
                 } else {
-                    // warn!("Duplicate x value detected, shifting end x coordinate  of {} slightly", line);
+                    // eprintln!("Duplicate x value detected, shifting end x coordinate  of {} slightly", line);
                     // line.end.x = line.end.x + options.x_shift;
-                    warn!("Duplicate x value detected, ignoring line: {}", line);
+                    eprintln!("Duplicate x value detected, ignoring line: {}", line);
                     return None;
                 }
             }
