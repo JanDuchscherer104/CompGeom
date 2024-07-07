@@ -9,10 +9,12 @@ mod utils;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let paths = get_dat_paths("data")?;
 
-    let lines = LineSegments2D::from_dat(&paths[3])?;
+    let lines = LineSegments2D::from_dat(&paths[0])?;
     // println!("{:?}", lines);
     let mut handler = Handler::new(lines.lines, SweepLineOptions::panic_disabled());
-    handler.run();
+    let intersections = handler.run();
+
+    println!("Found {} intersections", intersections.len());
 
     Ok(())
 }

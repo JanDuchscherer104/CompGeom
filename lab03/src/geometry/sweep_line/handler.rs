@@ -47,13 +47,14 @@ impl Handler {
         handler
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> HashSet<Intersection> {
         while !self.queue.is_empty() {
             let event = self.queue.pop();
             if let Some(event) = event {
                 self.handle_event(event);
             }
         }
+        self.intersections.clone()
     }
 
     fn handle_event(&mut self, event: Event) {
