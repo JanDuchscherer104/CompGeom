@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::point::Point2D;
@@ -251,6 +252,49 @@ mod tests {
         assert!(handler.intersections.iter().any(|i| i.point == intersection1.point));
         assert!(handler.intersections.iter().any(|i| i.point == intersection2.point));
         assert!(handler.intersections.iter().any(|i| i.point == intersection3.point));
+    }
+
+    #[test]
+    fn test_multiple_intersections_2() {
+        let line1 = Line2D::new(0.0, 0.0, 6.0, 1.0);
+        let line2 = Line2D::new(1.0, 1.0, 7.0, 1.0);
+        let line3 = Line2D::new(2.0, 4.0, 3.0, 1.0);
+        let line4 = Line2D::new(4.0, 3.0, 5.0, 0.0);
+
+        let mut handler = Handler::new(vec![line1, line2, line3, line4], get_options_to_panic());
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 3);
+    }
+
+    #[test]
+    fn test_multiple_intersections_3() {
+        let line1 = Line2D::new(2.1, 1.0,6.0, 4.0);
+        let line2 = Line2D::new(1.0, 2.0, 5.0, 2.0);
+        let line3 = Line2D::new(2.0, 3.0, 8.0, 0.0);
+        let line4 = Line2D::new(4.0, 1.0, 7.0, 7.0);
+
+        let mut handler = Handler::new(vec![line1, line2, line3, line4], get_options_to_panic());
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 6);
+    }
+
+    #[test]
+    fn test_intersection_circle() {
+        let line1 = Line2D::new(2.0, 1.0, 7.0, 1.0);
+        let line2 = Line2D::new(6.0, 0.0, 8.0, 6.0);
+        let line3 = Line2D::new(9.0, 5.0, 4.0, 7.0);
+        let line4 = Line2D::new(5.0, 7.0, 0.0, 3.0);
+        let line5 = Line2D::new(1.0, 4.0, 3.0, 0.0);
+
+        let mut handler = Handler::new(vec![line1, line2, line3, line4, line5], get_options_to_panic());
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 5);
     }
 
     #[test]
