@@ -2,11 +2,11 @@ pub mod external_library;
 pub mod geometry;
 pub mod naive_intersect;
 pub mod utils;
-use std::time::Instant;
+use cpu_time::ProcessTime;
 
 use utils::read_lines_from_file;
 
-// use crate::external_library::get_intersections_external;
+use external_library::get_intersections_external;
 use crate::naive_intersect::get_intersections;
 
 fn main() {
@@ -15,7 +15,9 @@ fn main() {
     print_header();
     for filename in filenames {
         let lines = read_lines_from_file(&format!(".data/{}", filename)).unwrap();
-        let start_time = Instant::now();
+        let start_time = ProcessTime::now();
+
+        // let intersections = get_intersections_external(&lines);
         let intersections = get_intersections(&lines);
         let duration = start_time.elapsed().as_millis();
         print_entry(
@@ -30,7 +32,7 @@ fn print_header() {
     println!("{}", "-".repeat(49));
     println!(
         "| {0: <10} | {1: <16} | {2: <13} |",
-        "# Lines", "# Intersections", "Duration (ms)"
+        "# Lines", "# Intersections", "CPU Time (ms)"
     );
     println!("{}", "-".repeat(49));
 }
