@@ -22,12 +22,17 @@ Lesen Sie die SVG-Datei 'DeutschlandMitStaedten.svg' und ermitteln Sie die Fläc
 | Baden-Württemberg        | 30522.31   | 0.7903     | Stuttgart            |
 
 ### Begründung der Lösung
-### Algorithmus
+#### Algorithmus
 * Shoelace Formel zur Berechnung der Fläche eines Polygons
 * Ray-Casting Algorithmus zur Bestimmung, ob ein Punkt innerhalb eines Polygons liegt
 
-### Tests
+#### Tests
 * Vielzahl an Tests zur Berechnung der Fläche eines Polygons und zur Bestimmung, ob ein Punkt innerhalb eines Polygons liegt
+
+#### Vergleich mit tatsächlicher Fläche
+* Vergleich mit tatsächlicher Bundeslandfläche (übernommen von https://www.statistikportal.de/de/bevoelkerung/flaeche-und-bevoelkerung).
+* Leichte Abweichungen sind vorhanden.
+* Separate Implementierung von Jan ergab das gleiche Ergebnis bzgl. Flächenunterschied -> Eventuell Abweichung des SVG oder eine der Limitierungen trifft zu.
 
 #### Limitierungen
 * Shoelace-Formel funktioniert nur für simple Polygone.
