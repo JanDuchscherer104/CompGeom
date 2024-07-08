@@ -189,7 +189,12 @@ impl Handler {
                     return None;
                 }
             }
-            Some(line)
+
+            return if line.start.x > line.end.x {
+                Some(Line2D::new(*line.end.x, *line.end.y, *line.start.x, *line.start.y))
+            } else {
+                Some(line)
+            }
         }).collect();
 
         res
