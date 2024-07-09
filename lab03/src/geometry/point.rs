@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use ordered_float::OrderedFloat;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -25,6 +26,12 @@ impl Ord for Point2D {
             Some(order) => order,
             None => std::cmp::Ordering::Equal,
         }
+    }
+}
+
+impl Display for Point2D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }
 
