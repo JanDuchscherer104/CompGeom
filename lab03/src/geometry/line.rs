@@ -40,39 +40,27 @@ impl Line2D {
             return point.x == self.start.x && point.y == self.start.y;
         }
 
-        // Compute lambda for x and y coordinates, handling zero cases safely
-        let lambda_x = if dx.abs() > f64::EPSILON {
-            Some((point.x - self.start.x) / dx)
-        } else {
-            // dx is zero, check if point.x equals start.x (perfectly vertical line)
-            if point.x == self.start.x {
-                Some(OrderedFloat::from(0.0))
-            } else {
-                None
-            }
-        };
+        // Check if the point lies on the line defined by the segment
+        let is_on_line = (dx == OrderedFloat(0.0) || (point.x - self.start.x) * dy == (point.y - self.start.y) * dx);
 
-        let lambda_y = if dy.abs() > f64::EPSILON {
-            Some((point.y - self.start.y) / dy)
-        } else {
-            // dy is zero, check if point.y equals start.y (perfectly horizontal line)
-            if point.y == self.start.y {
-                Some(OrderedFloat::from(0.0))
-            } else {
-                None
-            }
-        };
-
-        // Check if lambdas are defined and compare them if they are
-        match (lambda_x, lambda_y) {
-            (Some(lx), Some(ly)) if (lx - ly).abs() <= f64::EPSILON => {
-                // Both lambdas are approximately equal and within the segment range
-                lx >= OrderedFloat::from(0.0) && lx <= OrderedFloat::from(1.0) && ly >= OrderedFloat::from(0.0) && ly <= OrderedFloat::from(1.0)
-            }
-            (Some(lx), None) => lx >= OrderedFloat::from(0.0) && lx <= OrderedFloat::from(1.0), // Only lambda_x is valid (vertical line)
-            (None, Some(ly)) => ly >= OrderedFloat::from(0.0) && ly <= OrderedFloat::from(1.0), // Only lambda_y is valid (horizontal line)
-            _ => false, // Either lambda is None, or they don't match
+        if !is_on_line {
+            return false;
         }
+
+        // Check if the point is within the segment bounds
+        let within_x_bounds = if dx.abs() > f64::EPSILON {
+            (self.start.x <= point.x && point.x <= self.end.x) || (self.end.x <= point.x && point.x <= self.start.x)
+        } else {
+            true
+        };
+
+        let within_y_bounds = if dy.abs() > f64::EPSILON {
+            (self.start.y <= point.y && point.y <= self.end.y) || (self.end.y <= point.y && point.y <= self.start.y)
+        } else {
+            true
+        };
+
+        within_x_bounds && within_y_bounds
     }
 
 
@@ -265,6 +253,69 @@ mod tests {
 
     fn transform_to_geo_line(line: Line2D) -> LineString<f64> {
         line_string![(x: line.start.x.0, y: line.start.y.0), (x: line.end.x.0, y: line.end.y.0)]
+    }
+
+    #[test]
+    fn test_contains_point_on_horizontal_line() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 0.0);
+        let point = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(0.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_on_vertical_line() {
+        let line = Line2D::new(0.0, 0.0, 0.0, 5.0);
+        let point = Point2D { x: OrderedFloat(0.0), y: OrderedFloat(2.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_on_diagonal_line() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
+        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(3.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_outside_segment_bounds() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
+        let point = Point2D { x: OrderedFloat(6.0), y: OrderedFloat(6.0) };
+        assert!(!line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_not_on_line() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
+        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(4.0) };
+        assert!(!line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_on_endpoint_start() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
+        let point = Point2D { x: OrderedFloat(0.0), y: OrderedFloat(0.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_on_endpoint_end() {
+        let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
+        let point = Point2D { x: OrderedFloat(5.0), y: OrderedFloat(5.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_on_zero_length_line() {
+        let line = Line2D::new(2.0, 2.0, 2.0, 2.0);
+        let point = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) };
+        assert!(line.contains(point));
+    }
+
+    #[test]
+    fn test_contains_point_off_zero_length_line() {
+        let line = Line2D::new(2.0, 2.0, 2.0, 2.0);
+        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(2.0) };
+        assert!(!line.contains(point));
     }
 
     #[test]
