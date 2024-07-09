@@ -16,7 +16,8 @@ fn read_to_vec_tup(file_name: &str) -> Result<Vec<Line2D>> {
 }
 
 fn main() -> Result<()> {
-    let file_names = vec!["s_1000_1.dat", "s_10000_1.dat", "s_100000_1.dat"];
+    // let file_names = vec!["s_1000_1.dat", "s_10000_1.dat", "s_100000_1.dat"];
+    let file_names = vec!["s_1000_1 copy.dat"];
     for file_name in file_names.iter() {
         let start = Instant::now();
 

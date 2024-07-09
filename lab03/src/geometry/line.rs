@@ -1,6 +1,7 @@
-use std::cmp::Ordering;
+use std::cmp::{Ordering, PartialEq};
 use std::fmt::Display;
 use ordered_float::OrderedFloat;
+use crate::geometry::intersection::Intersection;
 use crate::geometry::point::Point2D;
 
 #[derive(Copy, Clone, Debug, Hash)]
@@ -41,7 +42,7 @@ impl Line2D {
         }
 
         // Check if the point lies on the line defined by the segment
-        let is_on_line = (dx == OrderedFloat(0.0) || (point.x - self.start.x) * dy == (point.y - self.start.y) * dx);
+        let is_on_line = dx == OrderedFloat(0.0) || (point.x - self.start.x) * dy == (point.y - self.start.y) * dx;
 
         if !is_on_line {
             return false;
@@ -64,9 +65,10 @@ impl Line2D {
     }
 
 
+
     /// Finds the intersection point between two line segments.
     /// If overlapping, it will return one of the overlapping endpoints.
-    pub fn find_intersection(&self, other: Line2D) -> Option<Point2D> {
+    pub fn find_intersection(&self, other: Line2D) -> Option<Intersection> {
         let (x1, y1) = (self.start.x.0, self.start.y.0);
         let (x2, y2) = (self.end.x.0, self.end.y.0);
         let (x3, y3) = (other.start.x.0, other.start.y.0);
@@ -74,18 +76,29 @@ impl Line2D {
 
         let denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
 
+        // collinear
         if denominator.abs() < f64::EPSILON {
-            return if self.contains(other.start) {
-                Some(other.start)
-            } else if self.contains(other.end) {
-                Some(other.end)
-            } else if other.contains(self.start) {
-                Some(self.start)
-            } else if other.contains(self.end) {
-                Some(self.end)
-            } else {
-                None
-            };
+            // Check if lines are identical
+            if *self == other {
+                return Some(Intersection::IdenticalOverlap { line1: *self, line2: other, overlap: *self })
+            }
+
+            // Check if one line is completely inside the other one
+            if self.contains(other.start) && self.contains(other.end) {
+                return Some(Intersection::ContainedOverlap { line1: *self, line2: other, overlap: other });
+            }
+            if other.contains(self.start) && other.contains(self.end) {
+                return Some(Intersection::ContainedOverlap { line1: *self, line2: other, overlap: *self });
+            }
+
+            // Check for partial overlap
+            if self.contains(other.start) || self.contains(other.end) || other.contains(self.start) || other.contains(self.end) {
+                let overlap_start = if self.contains(other.start) { other.start } else { self.start };
+                let overlap_end = if self.contains(other.end) { other.end } else { self.end };
+                let overlap = Line2D { start: overlap_start, end: overlap_end };
+                return Some(Intersection::PartialOverlap { line1: *self, line2: other, overlap });
+            }
+            return None
         }
 
         let ua_numerator = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
@@ -100,7 +113,16 @@ impl Line2D {
         if (ua >= -tolerance && ua <= 1.0 + tolerance) && (ub >= -tolerance && ub <= 1.0 + tolerance) {
             let intersection_x = x1 + ua * (x2 - x1);
             let intersection_y = y1 + ua * (y2 - y1);
-            Some(Point2D { x: OrderedFloat(intersection_x), y: OrderedFloat(intersection_y) })
+            let point = Point2D { x: OrderedFloat(intersection_x), y: OrderedFloat(intersection_y) };
+
+            let is_touching = (ua.abs() < tolerance || (ua - 1.0).abs() < tolerance) ||
+                (ub.abs() < tolerance || (ub - 1.0).abs() < tolerance);
+
+            if is_touching {
+                Some(Intersection::Touching { line1: *self, line2: other, point })
+            } else {
+                Some(Intersection::Crossing { line1: *self, line2: other, point })
+            }
         } else {
             None
         }
@@ -240,6 +262,7 @@ mod tests {
     use geo::line_string;
     use geo::{Intersects, LineString};
     use ordered_float::OrderedFloat;
+    use crate::geometry::intersection::Intersection;
     use crate::geometry::point::Point2D;
 
     use super::Line2D;
@@ -559,16 +582,126 @@ mod tests {
     }
 
     #[test]
-    fn get_intersection_when_intersection_at_midpoint() {
+    fn find_intersection_when_crossing_intersection() {
         let line1 = Line2D::new(1.0, 1.0, 3.0, 3.0);
         let line2 = Line2D::new(1.0, 3.0, 3.0, 1.0);
 
         let intersection = line1.find_intersection(line2).unwrap();
-        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
+
+        match intersection {
+            Intersection::Crossing { point, .. } => {
+                assert_eq!(point, Point2D::new(2.0,2.0))
+            },
+            _ => panic!("Expected Crossing intersection, but got {:?}", intersection),
+        }
     }
 
     #[test]
-    fn get_intersection_when_parallel_lines() {
+    fn find_intersection_when_touching_at_end() {
+        let line1 = Line2D::new(0.0, 1.0, 3.0, 1.0);
+        let line2 = Line2D::new(3.0, 0.0, 3.0, 1.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::Touching { point, .. } => {
+                assert_eq!(point, Point2D::new(3.0,1.0))
+            },
+            _ => panic!("Expected Touching intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_touching_in_middle() {
+        let line1 = Line2D::new(0.0, 1.0, 3.0, 1.0);
+        let line2 = Line2D::new(2.0, 0.0, 2.0, 1.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::Touching { point, .. } => {
+                assert_eq!(point, Point2D::new(2.0,1.0))
+            },
+            _ => panic!("Expected Touching intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_collinear_touching_at_end() {
+        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
+        let line2 = Line2D::new(2.0, 2.0, 3.0, 0.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::Touching { point, .. } => assert_eq!(point, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) }),
+            _ => panic!("Expected Touching intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_identical() {
+        let line1 = Line2D::new(0.0, 0.0, 5.0, 0.0);
+
+        let intersection = line1.find_intersection(line1).unwrap();
+
+        match intersection {
+            Intersection::IdenticalOverlap { overlap, .. } => {
+                assert_eq!(overlap, line1)
+            },
+            _ => panic!("Expected IdenticalOverlap intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_collinear_one_fully_contained() {
+        let line1 = Line2D::new(0.0, 0.0, 5.0, 0.0);
+        let line2 = Line2D::new(0.0, 0.0, 2.0, 0.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::ContainedOverlap { overlap, .. } => {
+                assert_eq!(overlap, line2)
+            },
+            _ => panic!("Expected ContainedOverlap intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_collinear_partial_overlap() {
+        let line1 = Line2D::new(0.0, 0.0, 2.0, 2.0);
+        let line2 = Line2D::new(1.0, 1.0, 3.0, 3.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::PartialOverlap { overlap, .. } => {
+                let expected_overlap = Line2D::new(1.0, 1.0, 2.0, 2.0);
+                assert_eq!(overlap, expected_overlap)
+            },
+            _ => panic!("Expected PartialOverlap intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_collinear_endpoint_overlap() {
+        let line1 = Line2D::new(0.0, 0.0, 3.0, 3.0);
+        let line2 = Line2D::new(3.0, 3.0, 5.0, 5.0);
+
+        let intersection = line1.find_intersection(line2).unwrap();
+
+        match intersection {
+            Intersection::PartialOverlap { overlap, .. } => {
+                let expected_overlap = Line2D::new(3.0, 3.0, 3.0, 3.0);
+                assert_eq!(overlap, expected_overlap)
+            },
+            _ => panic!("Expected PartialOverlap intersection, but got {:?}", intersection),
+        }
+    }
+
+    #[test]
+    fn find_intersection_when_parallel_lines() {
         let line1 = Line2D::new(1.0, 1.0, 3.0, 3.0);
         let line2 = Line2D::new(1.0, 2.0, 3.0, 4.0);
 
@@ -577,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    fn get_intersection_when_outside_segments() {
+    fn find_intersection_when_collinear_no_overlap() {
         let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
         let line2 = Line2D::new(3.0, 3.0, 4.0, 4.0);
 
@@ -586,20 +719,11 @@ mod tests {
     }
 
     #[test]
-    fn get_intersection_when_intersection_at_endpoint() {
+    fn find_intersection_when_no_intersection() {
         let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
-        let line2 = Line2D::new(2.0, 2.0, 3.0, 0.0);
+        let line2 = Line2D::new(1.0, 4.0, 2.0, 3.0);
 
-        let intersection = line1.find_intersection(line2).unwrap();
-        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
-    }
-
-    #[test]
-    fn get_intersection_when_intersection_at_endpoint_and_coincident() {
-        let line1 = Line2D::new(1.0, 1.0, 2.0, 2.0);
-        let line2 = Line2D::new(2.0, 2.0, 3.0, 3.0);
-
-        let intersection = line1.find_intersection(line2).unwrap();
-        assert_eq!(intersection, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) });
+        let intersection = line1.find_intersection(line2);
+        assert!(intersection.is_none());
     }
 }
