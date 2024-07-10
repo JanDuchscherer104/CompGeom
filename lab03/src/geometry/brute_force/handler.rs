@@ -41,7 +41,7 @@ impl BruteForceHandler {
             return;
         }
 
-        let mut x_coords: HashSet<OrderedFloat<f64>> = HashSet::new();
+        let x_coords: HashSet<OrderedFloat<f64>> = HashSet::new();
         let mut same_x_coords_counter = 0;
 
         let mut zero_length_lines = Vec::new();
@@ -74,21 +74,9 @@ impl BruteForceHandler {
                 Intersection::Touching { .. } => {
                     touching_lines.push(intersection);
                 }
-                Intersection::PartialOverlap {
-                    line1,
-                    line2,
-                    overlap,
-                }
-                | Intersection::ContainedOverlap {
-                    line1,
-                    line2,
-                    overlap,
-                }
-                | Intersection::IdenticalOverlap {
-                    line1,
-                    line2,
-                    overlap,
-                } => {
+                Intersection::PartialOverlap { .. }
+                | Intersection::ContainedOverlap { .. }
+                | Intersection::IdenticalOverlap { .. } => {
                     overlapping_lines.push(intersection.clone());
                 }
             }

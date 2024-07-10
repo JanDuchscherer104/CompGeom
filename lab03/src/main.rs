@@ -8,7 +8,6 @@ use std::path::Path;
 use std::time::Duration;
 
 mod geometry;
-mod utils;
 
 const ALL_LINES: [&str; 4] = [
     "data/s_1000_1.dat",
@@ -113,9 +112,15 @@ fn print_benchmark_results(results: Vec<BenchmarkResult>) {
         "| {0: <20} | {1: <10} | {2: <15} | {3: <15} |",
         "File", "# Lines", "# Intersections", "CPU Time (ms)"
     );
-    println!("| {} | {} | {} | {} |", "-".repeat(20), "-".repeat(10), "-".repeat(15), "-".repeat(15));
+    println!(
+        "| {} | {} | {} | {} |",
+        "-".repeat(20),
+        "-".repeat(10),
+        "-".repeat(15),
+        "-".repeat(15)
+    );
 
-    for (i, result) in results.iter().enumerate() {
+    for result in results {
         println!(
             "| {0: <20} | {1: <10} | {2: <15} | {3: <15} |",
             result.file,
