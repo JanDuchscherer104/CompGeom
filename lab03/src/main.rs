@@ -3,7 +3,7 @@ use crate::geometry::sweep_line::handler::SweepLineOptions;
 use cpu_time::ProcessTime;
 use geometry::line_segments::LineSegments2D;
 use geometry::sweep_line::handler::Handler;
-use std::env;
+use std::{env, panic};
 use std::path::Path;
 use std::time::Duration;
 
@@ -69,25 +69,8 @@ fn analyze(file: &str) {
 struct BenchmarkResult {
     file: String,
     lines: usize,
-    intersections: usize,
-    time: Duration,
-}
-
-fn benchmark(file: &str) -> BenchmarkResult {
-    let lines = get_lines(file).expect(format!("Error reading file {}", file).as_str());
-
-    let start = ProcessTime::try_now().expect("Getting process time failed");
-
-    let mut sweep_line_handler =
-        Handler::new(lines.lines.clone(), SweepLineOptions::panic_disabled());
-    let intersections = sweep_line_handler.run();
-
-    BenchmarkResult {
-        file: file.to_string(),
-        lines: lines.lines.len(),
-        intersections: intersections.len(),
-        time: start.elapsed(),
-    }
+    intersections: Option<usize>,
+    time: Option<Duration>,
 }
 
 fn benchmark_single(file: &str) {
@@ -103,6 +86,34 @@ fn benchmark_all() {
     }
 
     print_benchmark_results(benchmark_results);
+}
+
+fn benchmark(file: &str) -> BenchmarkResult {
+    let lines = get_lines(file).expect(format!("Error reading file {}", file).as_str());
+
+    let start = ProcessTime::try_now().expect("Getting process time failed");
+
+    let result = panic::catch_unwind(|| {
+        let mut sweep_line_handler = Handler::new(lines.clone().lines, SweepLineOptions::panic_disabled());
+        sweep_line_handler.run()
+    });
+
+    match result {
+        Ok(intersections) => BenchmarkResult {
+            file: file.to_string(),
+            lines: lines.lines.len(),
+            intersections: Some(intersections.len()),
+            time: Some(start.elapsed()),
+        },
+        Err(_) => {
+            BenchmarkResult {
+                file: file.to_string(),
+                lines: lines.lines.len(),
+                intersections: None,
+                time: None,
+            }
+        }
+    }
 }
 
 fn print_benchmark_results(results: Vec<BenchmarkResult>) {
@@ -121,12 +132,22 @@ fn print_benchmark_results(results: Vec<BenchmarkResult>) {
     );
 
     for result in results {
+        let intersections = match result.intersections {
+            Some(i) => i.to_string(),
+            None => "Error".to_string(),
+        };
+
+        let time = match result.time {
+            Some(t) => t.as_millis().to_string(),
+            None => "Error".to_string(),
+        };
+
         println!(
             "| {0: <20} | {1: <10} | {2: <15} | {3: <15} |",
             result.file,
             result.lines,
-            result.intersections,
-            result.time.as_millis()
+            intersections,
+            time
         );
     }
 
