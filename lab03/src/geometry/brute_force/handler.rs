@@ -1,13 +1,12 @@
-use std::cmp::max;
-use std::collections::HashSet;
-use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
-
+use ordered_float::OrderedFloat;
+use std::cmp::max;
+use std::collections::HashSet;
 
 pub struct BruteForceHandler {
     lines: Vec<Line2D>,
-    intersections: HashSet<Intersection>
+    intersections: HashSet<Intersection>,
 }
 
 impl BruteForceHandler {
@@ -20,11 +19,13 @@ impl BruteForceHandler {
 
     pub fn run(&mut self) -> HashSet<Intersection> {
         for i in 0..self.lines.len() {
-            for j in i+1..self.lines.len() {
+            for j in i + 1..self.lines.len() {
                 let line1 = self.lines[i];
                 let line2 = self.lines[j];
                 if line1.intersects(line2) {
-                    let intersection = line1.find_intersection(line2).expect("Intersection not found!");
+                    let intersection = line1
+                        .find_intersection(line2)
+                        .expect("Intersection not found!");
 
                     self.intersections.insert(intersection);
                 }
@@ -69,22 +70,40 @@ impl BruteForceHandler {
                     if x_coords.contains(&point.x) {
                         same_x_coords_counter += 1;
                     }
-                },
+                }
                 Intersection::Touching { .. } => {
                     touching_lines.push(intersection);
-                },
-                Intersection::PartialOverlap { line1, line2, overlap }
-                | Intersection::ContainedOverlap { line1, line2, overlap }
-                | Intersection::IdenticalOverlap { line1, line2, overlap } => {
+                }
+                Intersection::PartialOverlap {
+                    line1,
+                    line2,
+                    overlap,
+                }
+                | Intersection::ContainedOverlap {
+                    line1,
+                    line2,
+                    overlap,
+                }
+                | Intersection::IdenticalOverlap {
+                    line1,
+                    line2,
+                    overlap,
+                } => {
                     overlapping_lines.push(intersection.clone());
                 }
             }
         }
 
+        println!("Analysis:");
+        println!("Analyzed {} lines", self.lines.len());
+        println!("Found {} intersections", self.intersections.len());
         println!("Number of zero length lines: {}", zero_length_lines.len());
         println!("Number of vertical lines: {}", vertical_lines.len());
         println!("Number of touching lines: {}", touching_lines.len());
         println!("Number of overlapping lines: {}", overlapping_lines.len());
-        println!("Number of duplicate x-coordinates among intersections and endpoints: {}", same_x_coords_counter);
+        println!(
+            "Number of duplicate x-coordinates among intersections and endpoints: {}",
+            same_x_coords_counter
+        );
     }
 }
