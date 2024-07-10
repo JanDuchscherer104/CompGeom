@@ -4,6 +4,7 @@ use cpu_time::ProcessTime;
 use geometry::line_segments::LineSegments2D;
 use geometry::sweep_line::handler::Handler;
 use std::{env, panic};
+use std::fmt::Display;
 use std::path::Path;
 use std::time::Duration;
 
@@ -27,13 +28,27 @@ fn main() {
     match args[1].as_str() {
         "benchmark" => {
             let file = args[2].as_str();
+            let algorithm = match args.get(3) {
+                Some(algorithm) => match algorithm.as_str() {
+                    "--brute-force" => Algorithm::BruteForce,
+                    "--sweep-line" => Algorithm::SweepLine,
+                    _ => {
+                        eprintln!("Unknown parameter: {}", algorithm);
+                        return;
+                    }
+                },
+                None => {
+                    println!("Using default algorithm: Brute Force");
+                    Algorithm::BruteForce
+                },
+            };
             match file {
                 "" => {
                     eprintln!("No file specified");
                     return;
                 }
-                "all" => benchmark_all(),
-                _ => benchmark_single(file),
+                "all" => benchmark_all(algorithm),
+                _ => benchmark_single(file, algorithm),
             }
         }
         "analyze" => {
@@ -66,6 +81,21 @@ fn analyze(file: &str) {
     brute_force_handler.analyze();
 }
 
+#[derive(Clone, Copy)]
+enum Algorithm {
+    BruteForce,
+    SweepLine,
+}
+
+impl Display for Algorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Algorithm::BruteForce => write!(f, "Brute Force"),
+            Algorithm::SweepLine => write!(f, "Sweep Line"),
+        }
+    }
+}
+
 struct BenchmarkResult {
     file: String,
     lines: usize,
@@ -73,29 +103,39 @@ struct BenchmarkResult {
     time: Option<Duration>,
 }
 
-fn benchmark_single(file: &str) {
-    let result = benchmark(file);
+fn benchmark_single(file: &str, algorithm: Algorithm) {
+    let result = benchmark(file, algorithm);
 
     print_benchmark_results(vec![result]);
 }
 
-fn benchmark_all() {
+fn benchmark_all(algorithm: Algorithm) {
     let mut benchmark_results: Vec<BenchmarkResult> = Vec::new();
     for file in ALL_LINES.iter() {
-        benchmark_results.push(benchmark(file));
+        benchmark_results.push(benchmark(file, algorithm));
     }
 
     print_benchmark_results(benchmark_results);
 }
 
-fn benchmark(file: &str) -> BenchmarkResult {
+fn benchmark(file: &str, algorithm: Algorithm) -> BenchmarkResult {
+
+    println!("Starting benchmark for file {} with {} Algorithm...", file, algorithm.to_string());
     let lines = get_lines(file).expect(format!("Error reading file {}", file).as_str());
 
     let start = ProcessTime::try_now().expect("Getting process time failed");
 
     let result = panic::catch_unwind(|| {
-        let mut sweep_line_handler = Handler::new(lines.clone().lines, SweepLineOptions::panic_disabled());
-        sweep_line_handler.run()
+        match algorithm {
+            Algorithm::BruteForce => {
+                let mut brute_force_handler = brute_force::handler::BruteForceHandler::new(lines.clone().lines);
+                brute_force_handler.run()
+            }
+            Algorithm::SweepLine => {
+                let mut sweep_line_handler = Handler::new(lines.clone().lines, SweepLineOptions::panic_disabled());
+                sweep_line_handler.run()
+            }
+        }
     });
 
     match result {
