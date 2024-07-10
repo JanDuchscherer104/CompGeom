@@ -1,10 +1,10 @@
-use std::collections::HashSet;
-use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::sweep_line::event_queue::EventQueue;
 use crate::geometry::sweep_line::events::Event;
 use crate::geometry::sweep_line::sweep_line::SweepLine;
+use ordered_float::OrderedFloat;
+use std::collections::HashSet;
 
 /// Options for the sweep line algorithm
 /// panic_on_identical_x: if true, the algorithm will panic if two lines have the same end/intersection x coordinate, otherwise it will ignore the line
@@ -59,7 +59,13 @@ pub struct Handler {
 impl Handler {
     pub fn new(mut lines: Vec<Line2D>, options: SweepLineOptions) -> Self {
         let (lines, x_coords) = Self::sanity_checks(&mut lines, &options);
-        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new(), options, x_coords };
+        let handler = Handler {
+            queue: EventQueue::new(lines.clone()),
+            sweep_line: SweepLine::new(),
+            intersections: HashSet::new(),
+            options,
+            x_coords,
+        };
 
         handler
     }
@@ -70,21 +76,19 @@ impl Handler {
             if let Some(event) = event {
                 self.handle_event(event);
             }
-        };
-        self.intersections.iter().for_each(|i| match i {
-            Intersection::Crossing { point, ..} => { println!("{}", point)}
-            _ => {}
-        });
+        }
         self.intersections.clone()
     }
 
     fn handle_event(&mut self, event: Event) {
         match event {
-            Event::StartEvent { line } => { self.handle_start_event(line) }
-            Event::EndEvent { line } => { self.handle_end_event(line) }
-            Event::IntersectionEvent { intersection, smaller, bigger } => {
-                self.handle_intersection_event(intersection, smaller, bigger)
-            }
+            Event::StartEvent { line } => self.handle_start_event(line),
+            Event::EndEvent { line } => self.handle_end_event(line),
+            Event::IntersectionEvent {
+                intersection,
+                smaller,
+                bigger,
+            } => self.handle_intersection_event(intersection, smaller, bigger),
         }
     }
 
@@ -122,14 +126,19 @@ impl Handler {
         }
     }
 
-    fn handle_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
+    fn handle_intersection_event(
+        &mut self,
+        intersection: Intersection,
+        smaller: Line2D,
+        bigger: Line2D,
+    ) {
         // small shift to the right to calculate order behind intersection
         let point = match intersection {
-            Intersection::Crossing { point, .. } => { point }
-            Intersection::Touching { point, .. } => { point }
-            Intersection::PartialOverlap { overlap, .. } => { overlap.start }
-            Intersection::ContainedOverlap { overlap, .. } => { overlap.start }
-            Intersection::IdenticalOverlap { overlap, .. } => { overlap.start }
+            Intersection::Crossing { point, .. } => point,
+            Intersection::Touching { point, .. } => point,
+            Intersection::PartialOverlap { overlap, .. } => overlap.start,
+            Intersection::ContainedOverlap { overlap, .. } => overlap.start,
+            Intersection::IdenticalOverlap { overlap, .. } => overlap.start,
         };
 
         self.sweep_line.set_x(point.x.0 + self.options.x_shift);
@@ -139,7 +148,6 @@ impl Handler {
 
         let above = self.sweep_line.get_neighbors(&smaller).bigger;
         let below = self.sweep_line.get_neighbors(&bigger).smaller;
-
 
         // if intersection segE2 with segA
         if let Some(above) = above {
@@ -157,18 +165,24 @@ impl Handler {
         }
     }
 
-    fn add_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
+    fn add_intersection_event(
+        &mut self,
+        intersection: Intersection,
+        smaller: Line2D,
+        bigger: Line2D,
+    ) {
         match intersection {
-            Intersection::Crossing { point, ..} => {
-                println!("Adding intersection at {}", point);
-                let new_event = Event::IntersectionEvent { intersection, smaller, bigger };
+            Intersection::Crossing { point, .. } => {
+                let new_event = Event::IntersectionEvent {
+                    intersection,
+                    smaller,
+                    bigger,
+                };
 
                 let queue_contains = self.queue.contains(&new_event);
 
-
                 if self.intersections.contains(&intersection) || queue_contains {
                     println!("Intersection at {} already in Queue", point);
-                    println!("-------------------------------------");
                     return;
                 }
 
@@ -178,16 +192,17 @@ impl Handler {
                     if self.options.panic_on_identical_x {
                         panic!("Duplicate x-Coordinate: {:?}", intersection)
                     } else {
-                        eprintln!("Duplicate x-Coordinate. Skip adding intersection event of {:?}", intersection);
-                        return
+                        eprintln!(
+                            "Duplicate x-Coordinate. Skip adding intersection event of {:?}",
+                            intersection
+                        );
+                        return;
                     }
                 }
 
                 self.x_coords.insert(point.x);
                 self.queue.add(new_event);
-                println!("Intersection {} added to queue", point);
-                println!("-------------------------------------");
-            },
+            }
             // Error Handling Below
             Intersection::Touching { .. } => {
                 if self.options.panic_on_touch {
@@ -196,7 +211,7 @@ impl Handler {
                 eprintln!("Touching intersection detected {:?}", intersection);
                 // todo: add it to the output, but not queue, or skip entirely?
                 return;
-            },
+            }
             _ => {
                 if self.options.panic_on_overlap {
                     panic!("Overlapping intersection detected {:?}", intersection);
@@ -214,10 +229,14 @@ impl Handler {
     ///   - lines with identical x coordinates -> panic
     ///   - vertical lines -> panic
     /// Complexity: O(n)
-    fn sanity_checks(lines: &mut Vec<Line2D>, options: &SweepLineOptions) -> (Vec<Line2D>, HashSet<OrderedFloat<f64>>) {
+    fn sanity_checks(
+        lines: &mut Vec<Line2D>,
+        options: &SweepLineOptions,
+    ) -> (Vec<Line2D>, HashSet<OrderedFloat<f64>>) {
         let mut x_coords = HashSet::new();
 
-        let res = lines.clone()
+        let res = lines
+            .clone()
             .into_iter()
             .filter_map(|mut line| {
                 if line.is_zero_length() {
@@ -257,7 +276,8 @@ impl Handler {
                 }
 
                 Some(line)
-            }).collect();
+            })
+            .collect();
 
         (res, x_coords)
     }
@@ -266,8 +286,8 @@ impl Handler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ordered_float::OrderedFloat;
     use crate::geometry::point::Point2D;
+    use ordered_float::OrderedFloat;
 
     fn get_options_to_panic() -> SweepLineOptions {
         SweepLineOptions::panic_enabled()
@@ -281,7 +301,14 @@ mod tests {
 
         handler.run();
 
-        let intersection = Intersection::Crossing { line1, line2, point: Point2D { x: OrderedFloat(2.5), y: OrderedFloat(2.5) } };
+        let intersection = Intersection::Crossing {
+            line1,
+            line2,
+            point: Point2D {
+                x: OrderedFloat(2.5),
+                y: OrderedFloat(2.5),
+            },
+        };
 
         assert!(handler.intersections.iter().any(|i| i == &intersection));
     }
@@ -302,17 +329,41 @@ mod tests {
         let line1 = Line2D::new(0.0, 2.0, 10.0, 2.0);
         let line2 = Line2D::new(2.0, 0.0, 8.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
-        let mut handler = Handler::new(vec![line1, line2, line3], SweepLineOptions::panic_disabled());
+        let mut handler = Handler::new(
+            vec![line1, line2, line3],
+            SweepLineOptions::panic_disabled(),
+        );
 
         handler.run();
 
-        let ip1 = Point2D { x: OrderedFloat(4.0), y: OrderedFloat(2.0) };
-        let ip2 = Point2D { x: OrderedFloat(5.5), y: OrderedFloat(3.5) };
-        let ip3 = Point2D { x: OrderedFloat(7.0), y: OrderedFloat(2.0) };
+        let ip1 = Point2D {
+            x: OrderedFloat(4.0),
+            y: OrderedFloat(2.0),
+        };
+        let ip2 = Point2D {
+            x: OrderedFloat(5.5),
+            y: OrderedFloat(3.5),
+        };
+        let ip3 = Point2D {
+            x: OrderedFloat(7.0),
+            y: OrderedFloat(2.0),
+        };
 
-        let intersection1 = Intersection::Crossing { line1, line2, point: ip1 };
-        let intersection2 = Intersection::Crossing { line1: line2, line2: line3, point: ip2 };
-        let intersection3 = Intersection::Crossing { line1, line2: line3, point: ip3 };
+        let intersection1 = Intersection::Crossing {
+            line1,
+            line2,
+            point: ip1,
+        };
+        let intersection2 = Intersection::Crossing {
+            line1: line2,
+            line2: line3,
+            point: ip2,
+        };
+        let intersection3 = Intersection::Crossing {
+            line1,
+            line2: line3,
+            point: ip3,
+        };
 
         assert_eq!(handler.intersections.len(), 3);
         assert!(handler.intersections.iter().any(|i| i == &intersection1));
@@ -328,7 +379,10 @@ mod tests {
         let line4 = Line2D::new(5.0, 7.0, 0.0, 3.0);
         let line5 = Line2D::new(1.0, 4.0, 3.0, 0.0);
 
-        let mut handler = Handler::new(vec![line1, line2, line3, line4, line5], get_options_to_panic());
+        let mut handler = Handler::new(
+            vec![line1, line2, line3, line4, line5],
+            get_options_to_panic(),
+        );
 
         let intersections = handler.run();
 
@@ -338,11 +392,10 @@ mod tests {
     #[test]
     fn test_multiple_intersections_same_start_point() {
         // Visualization: https://www.geogebra.org/calculator/mtakwyb8
-        let line1 = Line2D::new(2.0,4.0,10.0,4.0);
-        let line2 = Line2D::new(2.0,5.0,11.0, 3.0);
-        let line3 = Line2D::new(2.0,6.0, 9.0, 2.0);
+        let line1 = Line2D::new(2.0, 4.0, 10.0, 4.0);
+        let line2 = Line2D::new(2.0, 5.0, 11.0, 3.0);
+        let line3 = Line2D::new(2.0, 6.0, 9.0, 2.0);
         let line4 = Line2D::new(2.0, 8.0, 8.0, 2.0);
-
 
         let mut handler = Handler::new(vec![line1, line2, line3, line4], get_options_to_panic());
 
@@ -357,7 +410,11 @@ mod tests {
         let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3], get_options_to_panic())).is_err());
+        assert!(std::panic::catch_unwind(|| Handler::new(
+            vec![line1, line2, line3],
+            get_options_to_panic()
+        ))
+        .is_err());
     }
 
     #[test]
@@ -366,7 +423,11 @@ mod tests {
         let line2 = Line2D::new(0.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        assert!(std::panic::catch_unwind(|| Handler::new(vec![line1, line2, line3], get_options_to_panic())).is_err());
+        assert!(std::panic::catch_unwind(|| Handler::new(
+            vec![line1, line2, line3],
+            get_options_to_panic()
+        ))
+        .is_err());
     }
 
     #[test]
@@ -375,7 +436,10 @@ mod tests {
         let line2 = Line2D::new(1.0, 0.0, 2.0, 6.0);
         let line3 = Line2D::new(5.0, 4.0, 9.0, 0.0);
 
-        let handler = Handler::new(vec![line1, line2, line3], SweepLineOptions::panic_disabled());
+        let handler = Handler::new(
+            vec![line1, line2, line3],
+            SweepLineOptions::panic_disabled(),
+        );
 
         let queue = &handler.queue;
 
@@ -392,6 +456,7 @@ mod tests {
         assert!(std::panic::catch_unwind(|| {
             let mut handler = Handler::new(vec![line1, line2, line3], get_options_to_panic());
             handler.run();
-        }).is_err());
+        })
+        .is_err());
     }
 }
