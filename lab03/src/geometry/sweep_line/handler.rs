@@ -180,7 +180,7 @@ impl Handler {
                 };
 
                 // already processed
-                if self.sweep_line.get_x() > point.x || self.queue.contains(&new_event)  {
+                if self.sweep_line.get_x() > point.x || self.queue.contains(&new_event) {
                     return;
                 }
 
