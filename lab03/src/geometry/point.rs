@@ -1,7 +1,10 @@
+use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use ordered_float::OrderedFloat;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+const EPSILON: f64 = 1e-9;
+
+#[derive(Copy, Clone, Debug, Eq, Hash)]
 pub struct Point2D {
     pub x: OrderedFloat<f64>,
     pub y: OrderedFloat<f64>,
@@ -10,6 +13,10 @@ pub struct Point2D {
 impl Point2D {
     pub fn new(x: f64, y: f64) -> Self {
         Self { x: OrderedFloat(x), y: OrderedFloat(y) }
+    }
+
+    fn nearly_equals(&self, other: &Point2D) -> bool {
+        (self.x - other.x).abs() < EPSILON && (self.y - other.y).abs() < EPSILON
     }
 }
 
@@ -20,12 +27,21 @@ impl PartialOrd for Point2D {
 }
 
 impl Ord for Point2D {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self.x.partial_cmp(&other.x) {
-            Some(std::cmp::Ordering::Equal) => self.y.partial_cmp(&other.y).unwrap_or(std::cmp::Ordering::Equal),
-            Some(order) => order,
-            None => std::cmp::Ordering::Equal,
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.nearly_equals(other) {
+            Ordering::Equal
+        } else {
+            self.x.partial_cmp(&other.x)
+                .unwrap_or(Ordering::Equal)
+                .then_with(|| self.y.partial_cmp(&other.y).unwrap_or(Ordering::Equal))
         }
+    }
+}
+
+
+impl PartialEq for Point2D {
+    fn eq(&self, other: &Self) -> bool {
+        self.nearly_equals(other)
     }
 }
 

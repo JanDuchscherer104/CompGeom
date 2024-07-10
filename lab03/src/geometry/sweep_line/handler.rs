@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::sweep_line::event_queue::EventQueue;
@@ -6,7 +7,7 @@ use crate::geometry::sweep_line::events::Event;
 use crate::geometry::sweep_line::sweep_line::SweepLine;
 
 /// Options for the sweep line algorithm
-/// panic_on_identical_x: if true, the algorithm will panic if two lines have the same x coordinate, otherwise it will ignore the line
+/// panic_on_identical_x: if true, the algorithm will panic if two lines have the same end/intersection x coordinate, otherwise it will ignore the line
 /// panic_on_vertical: if true, the algorithm will panic if a vertical line is encountered, otherwise it will ignore the line
 /// panic_on_zero_length: if true, the algorithm will panic if a line has zero length, otherwise it will ignore the line
 /// panic_on_overlap: if true, the algorithm will panic if two collinear lines are overlapping, otherwise it will ignore the intersection
@@ -52,12 +53,13 @@ pub struct Handler {
     sweep_line: SweepLine,
     intersections: HashSet<Intersection>,
     options: SweepLineOptions,
+    x_coords: HashSet<OrderedFloat<f64>>,
 }
 
 impl Handler {
     pub fn new(mut lines: Vec<Line2D>, options: SweepLineOptions) -> Self {
-        lines = Self::sanity_checks(&mut lines, &options);
-        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new(), options };
+        let (lines, x_coords) = Self::sanity_checks(&mut lines, &options);
+        let handler = Handler { queue: EventQueue::new(lines.clone()), sweep_line: SweepLine::new(), intersections: HashSet::new(), options, x_coords };
 
         handler
     }
@@ -68,7 +70,11 @@ impl Handler {
             if let Some(event) = event {
                 self.handle_event(event);
             }
-        }
+        };
+        self.intersections.iter().for_each(|i| match i {
+            Intersection::Crossing { point, ..} => { println!("{}", point)}
+            _ => {}
+        });
         self.intersections.clone()
     }
 
@@ -154,25 +160,33 @@ impl Handler {
     fn add_intersection_event(&mut self, intersection: Intersection, smaller: Line2D, bigger: Line2D) {
         match intersection {
             Intersection::Crossing { point, ..} => {
-                if self.options.panic_on_identical_x {
-                    if self.intersections.iter().any(|i| {
-                        return match i {
-                            // should be the only legal case
-                            Intersection::Crossing { point: iter_point, .. } => {
-                                iter_point.x == point.x
-                            },
-                            _ => false
-                        }
-                    }) {
+                println!("Adding intersection at {}", point);
+                let new_event = Event::IntersectionEvent { intersection, smaller, bigger };
 
-                    }
-                }
+                let queue_contains = self.queue.contains(&new_event);
 
-                if self.intersections.contains(&intersection) {
+
+                if self.intersections.contains(&intersection) || queue_contains {
+                    println!("Intersection at {} already in Queue", point);
+                    println!("-------------------------------------");
                     return;
                 }
 
-                self.queue.add(Event::IntersectionEvent { intersection, smaller, bigger });
+                // self.intersections.iter().for_each(|i| { println!("{:?}", i)});
+
+                if self.x_coords.contains(&point.x) {
+                    if self.options.panic_on_identical_x {
+                        panic!("Duplicate x-Coordinate: {:?}", intersection)
+                    } else {
+                        eprintln!("Duplicate x-Coordinate. Skip adding intersection event of {:?}", intersection);
+                        return
+                    }
+                }
+
+                self.x_coords.insert(point.x);
+                self.queue.add(new_event);
+                println!("Intersection {} added to queue", point);
+                println!("-------------------------------------");
             },
             // Error Handling Below
             Intersection::Touching { .. } => {
@@ -200,12 +214,12 @@ impl Handler {
     ///   - lines with identical x coordinates -> panic
     ///   - vertical lines -> panic
     /// Complexity: O(n)
-    fn sanity_checks(lines: &mut Vec<Line2D>, options: &SweepLineOptions) -> Vec<Line2D> {
+    fn sanity_checks(lines: &mut Vec<Line2D>, options: &SweepLineOptions) -> (Vec<Line2D>, HashSet<OrderedFloat<f64>>) {
         let mut x_coords = HashSet::new();
 
         let res = lines.clone()
             .into_iter()
-            .filter_map(|line| {
+            .filter_map(|mut line| {
                 if line.is_zero_length() {
                     if options.panic_on_zero_length {
                         panic!("Zero length line detected: {}", line);
@@ -225,16 +239,10 @@ impl Handler {
                     }
                 }
 
-                if x_coords.contains(&(line.start.x)) {
-                    if options.panic_on_identical_x {
-                        panic!("Lines have identical x coordinates: {}", line.start.x);
-                    } else {
-                        // eprintln!("Duplicate x value detected, shifting start x coordinate of {} slightly", line);
-                        // line.start.x = line.start.x + options.x_shift;
-                        eprintln!("Duplicate x value detected, ignoring line: {}", line);
-                        return None;
-                    }
+                if line.start.x > line.end.x {
+                    line = Line2D::new(*line.end.x, *line.end.y, *line.start.x, *line.start.y);
                 }
+
                 x_coords.insert(line.start.x);
 
                 if x_coords.contains(&(line.end.x)) {
@@ -248,14 +256,10 @@ impl Handler {
                     }
                 }
 
-                return if line.start.x > line.end.x {
-                    Some(Line2D::new(*line.end.x, *line.end.y, *line.start.x, *line.start.y))
-                } else {
-                    Some(line)
-                };
+                Some(line)
             }).collect();
 
-        res
+        (res, x_coords)
     }
 }
 
@@ -329,6 +333,22 @@ mod tests {
         let intersections = handler.run();
 
         assert_eq!(intersections.len(), 5);
+    }
+
+    #[test]
+    fn test_multiple_intersections_same_start_point() {
+        // Visualization: https://www.geogebra.org/calculator/mtakwyb8
+        let line1 = Line2D::new(2.0,4.0,10.0,4.0);
+        let line2 = Line2D::new(2.0,5.0,11.0, 3.0);
+        let line3 = Line2D::new(2.0,6.0, 9.0, 2.0);
+        let line4 = Line2D::new(2.0, 8.0, 8.0, 2.0);
+
+
+        let mut handler = Handler::new(vec![line1, line2, line3, line4], get_options_to_panic());
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 6);
     }
 
     #[test]

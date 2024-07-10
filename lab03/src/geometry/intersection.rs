@@ -1,12 +1,12 @@
-use std::hash::Hash;
+use std::fmt::{Display, Formatter};
+use std::hash::{Hash, Hasher};
 use crate::geometry::line::Line2D;
 use crate::geometry::point::Point2D;
 
-#[derive(Copy, Clone, Debug, Hash)]
+#[derive(Copy, Clone, Debug)]
 pub enum Intersection {
     Crossing { line1: Line2D, line2: Line2D, point: Point2D },
     Touching { line1: Line2D, line2: Line2D, point: Point2D },
-    /// One line is only partially overlapping the other
     PartialOverlap { line1: Line2D, line2: Line2D, overlap: Line2D },
     ContainedOverlap { line1: Line2D, line2: Line2D, overlap: Line2D },
     IdenticalOverlap { line1: Line2D, line2: Line2D, overlap: Line2D },
@@ -48,3 +48,53 @@ impl PartialEq for Intersection {
 }
 
 impl Eq for Intersection {}
+
+impl Hash for Intersection {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let (line1, line2) = match self {
+            Intersection::Crossing { line1, line2, point }
+            | Intersection::Touching { line1, line2, point } => {
+                point.hash(state);
+                if line1 <= line2 {
+                    (line1, line2)
+                } else {
+                    (line2, line1)
+                }
+            }
+            Intersection::PartialOverlap { line1, line2, overlap }
+            | Intersection::ContainedOverlap { line1, line2, overlap }
+            | Intersection::IdenticalOverlap { line1, line2, overlap } => {
+                overlap.hash(state);
+                if line1 <= line2 {
+                    (line1, line2)
+                } else {
+                    (line2, line1)
+                }
+            }
+        };
+        line1.hash(state);
+        line2.hash(state);
+    }
+}
+
+impl Display for Intersection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Intersection::Crossing { line1, line2, point } => {
+                write!(f, "Crossing: line1: {:?}, line2: {:?}, point: {:?}", line1, line2, point)
+            }
+            Intersection::Touching { line1, line2, point } => {
+                write!(f, "Touching: line1: {}, line2: {}, point: {}", line1, line2, point)
+            }
+            Intersection::PartialOverlap { line1, line2, overlap } => {
+                write!(f, "PartialOverlap: line1: {}, line2: {}, overlap: {}", line1, line2, overlap)
+            }
+            Intersection::ContainedOverlap { line1, line2, overlap } => {
+                write!(f, "ContainedOverlap: line1: {}, line2: {}, overlap: {}", line1, line2, overlap)
+            }
+            Intersection::IdenticalOverlap { line1, line2, overlap } => {
+                write!(f, "IdenticalOverlap: line1: {}, line2: {}, overlap: {}", line1, line2, overlap)
+            }
+        }
+    }
+}

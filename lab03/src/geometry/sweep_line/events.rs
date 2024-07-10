@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
+use std::hash::{Hash, Hasher};
 use crate::geometry::intersection::Intersection;
 use crate::geometry::line::Line2D;
 use crate::geometry::point::Point2D;
@@ -21,10 +22,14 @@ pub enum Event {
 
 impl PartialEq for Event {
     fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == Ordering::Equal
+        match (self, other) {
+            (Event::StartEvent { line: line1 }, Event::StartEvent { line: line2 }) => line1 == line2,
+            (Event::EndEvent { line: line1 }, Event::EndEvent { line: line2 }) => line1 == line2,
+            (Event::IntersectionEvent { intersection: i1, .. }, Event::IntersectionEvent { intersection: i2, .. }) => i1 == i2,
+            _ => false,
+        }
     }
 }
-
 impl Eq for Event {}
 
 impl PartialOrd for Event {
@@ -42,12 +47,34 @@ impl Ord for Event {
             (Event::EndEvent { line: line1 }, Event::EndEvent { line: line2 }) => line1.end.cmp(&line2.end),
             (Event::EndEvent { line: end }, Event::StartEvent { line: start }) => end.end.cmp(&start.start),
             (Event::EndEvent { line: end }, Event::IntersectionEvent { intersection: i1, .. }) => end.end.cmp(get_point_of_intersection(i1)),
-            (Event::IntersectionEvent { intersection: i1, .. }, Event::IntersectionEvent { intersection: i2, .. }) => get_point_of_intersection(i1).cmp(get_point_of_intersection(i2)),
+            (Event::IntersectionEvent { intersection: i1, .. }, Event::IntersectionEvent { intersection: i2, .. }) => {
+                println!("Comparing {} with {}", i1, i2);
+                get_point_of_intersection(i1).cmp(get_point_of_intersection(i2))
+            },
             (Event::IntersectionEvent { intersection: i1, .. }, Event::StartEvent { line: start }) => get_point_of_intersection(i1).cmp(&start.start),
             (Event::IntersectionEvent { intersection: i1, .. }, Event::EndEvent { line: end }) => get_point_of_intersection(i1).cmp(&end.end),
         }
     }
 }
+
+impl Hash for Event {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Event::StartEvent { line } => {
+                line.start.hash(state);
+                line.end.hash(state);
+            }
+            Event::EndEvent { line } => {
+                line.start.hash(state);
+                line.end.hash(state);
+            }
+            Event::IntersectionEvent { intersection, .. } => {
+                intersection.hash(state);
+            }
+        }
+    }
+}
+
 
 fn get_point_of_intersection(intersection: &Intersection) -> &Point2D {
     match intersection {
