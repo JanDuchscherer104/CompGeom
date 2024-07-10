@@ -179,9 +179,8 @@ impl Handler {
                     bigger,
                 };
 
-                let queue_contains = self.queue.contains(&new_event);
-
-                if self.intersections.contains(&intersection) || queue_contains {
+                // already processed
+                if self.sweep_line.get_x() > point.x || self.queue.contains(&new_event)  {
                     return;
                 }
 
@@ -368,6 +367,23 @@ mod tests {
         assert!(handler.intersections.iter().any(|i| i == &intersection1));
         assert!(handler.intersections.iter().any(|i| i == &intersection2));
         assert!(handler.intersections.iter().any(|i| i == &intersection3));
+    }
+
+    #[test]
+    fn test_multiple_intersections_2() {
+        // Visualization: https://www.geogebra.org/calculator/afhecrhe
+        let line1 = Line2D::new(15.464, 11.435, 21.483, 19.674);
+        let line2 = Line2D::new(21.649, 17.08, 21.1849, 20.6585);
+        let line3 = Line2D::new(19.327, 16.897, 26.684, 24.9231);
+
+        let mut handler = Handler::new(
+            vec![line1, line2, line3],
+            SweepLineOptions::panic_disabled(),
+        );
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 3);
     }
 
     #[test]

@@ -81,6 +81,10 @@ impl SweepLine {
         self.lines.sort();
     }
 
+    pub fn get_x(&self) -> OrderedFloat<f64> {
+        OrderedFloat::from(*self.x.borrow())
+    }
+
     pub fn add(&mut self, line: Line2D) {
         self.lines.push(OrderedLine::new(line, self.x.clone()));
         self.lines.sort();
