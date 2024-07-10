@@ -21,7 +21,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        eprintln!("Usage: {} <benchmark|analyze> <filename|all>", args[0]);
+        eprintln!("Usage: {} <benchmark|analyze> <filename|all> <--brute-force|--sweep-line>", args[0]);
         return;
     }
 
