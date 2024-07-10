@@ -1,3 +1,13 @@
+## Excercise 01
+### Results
+| File                 | # Lines    | # Intersections | CPU Time (ms)   |
+| -------------------- | ---------- | --------------- | --------------- |
+| data/s_1000_1.dat    | 1001       | 11              | 61              |
+| data/s_1000_10.dat   | 994        | 796             | 60              |
+| data/s_10000_1.dat   | 10001      | 733             | 6109            |
+| data/s_100000_1.dat  | 100001     | 77135           | 626999          |
+
+
 ## Excercise 03
 Implementieren Sie unter Zuhilfenahme der Funktionalität aus Aufgabe 1 zur Berechnung von Schnittpunkten zwischen Linien einen Sweep Line Algorithmus und vergleichen Sie die erzielten Laufzeiten. Verwenden Sie für die Laufzeitvergleiche neben den Daten aus der ersten Aufgabe die Daten aus s_1000_10.dat. Vergleichen Sie ebenso die Laufzeiten für die Files s_1000_1.dat und s_1000_10.dat (s.u.) .
 
@@ -22,13 +32,13 @@ where `<file>` is the path to the file containing the line segments (e.g. `data/
 | data/s_1000_1.dat    | 1001       | 4               | 5               |
 | data/s_1000_10.dat   | 994        | 796             | 28              |
 | data/s_10000_1.dat   | 10001      | 709             | 193             |
-| data/s_100000_1.dat  | 100001     | Error           | Error           |
+| data/s_100000_1.dat  | 100001     | 63344           | 15660           |
 
 #### Interpretation of results
 - The file `s_1000_1.dat` actually contains 11 intersections, however 4 of them are overlapping lines and 3 of them are touching lines. As such, the implementation works as expected.
 - The file `s_1000_10.dat` contains 796 intersections, which is the expected result.
 - The file `s_10000_1.dat` contains 733 intersections. There are again 4 overlapping and 3 touching lines. The remaining difference might be due to vertical, zero-length lines. Furthermore, end and intersection events with the same x-coordinate are filtered out.
-- The file `s_100000_1.dat` unfortunately results in an error, that I could not investigate further, due to time constraints.
+- The file `s_100000_1.dat` actually contains 77135 intersections. There are again 4 overlapping and 3 touching lines. The remaining difference might be due to vertical, zero-length lines. Furthermore, end and intersection events with the same x-coordinate are filtered out.
 
 ### Implementation details
 - The implementation is based on the Bentley Ottmann Algorithm
