@@ -41,7 +41,7 @@ impl BruteForceHandler {
             return;
         }
 
-        let x_coords: HashSet<OrderedFloat<f64>> = HashSet::new();
+        let mut x_coords: HashSet<OrderedFloat<f64>> = HashSet::new();
         let mut same_x_coords_counter = 0;
 
         let mut zero_length_lines = Vec::new();
@@ -61,6 +61,8 @@ impl BruteForceHandler {
             let start_x = max(line.start.x, line.end.x);
             if x_coords.contains(&start_x) {
                 same_x_coords_counter += 1;
+            } else {
+                x_coords.insert(start_x);
             }
         }
 
@@ -69,6 +71,8 @@ impl BruteForceHandler {
                 Intersection::Crossing { point, .. } => {
                     if x_coords.contains(&point.x) {
                         same_x_coords_counter += 1;
+                    } else {
+                        x_coords.insert(point.x);
                     }
                 }
                 Intersection::Touching { .. } => {
@@ -81,7 +85,6 @@ impl BruteForceHandler {
                 }
             }
         }
-
         println!("Analysis:");
         println!("Analyzed {} lines", self.lines.len());
         println!("Found {} intersections", self.intersections.len());
