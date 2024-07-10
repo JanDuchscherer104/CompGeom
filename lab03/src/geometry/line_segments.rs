@@ -1,9 +1,9 @@
+use ordered_float::OrderedFloat;
 use std::{
     fs,
     io::{self, BufRead},
     path::Path,
 };
-use ordered_float::OrderedFloat;
 
 use super::line::Line2D;
 
@@ -32,9 +32,9 @@ impl LineSegments2D {
                         let y2 = nums[3];
 
                         if OrderedFloat(x1) < OrderedFloat(x2) {
-                            Ok(Line2D::new(x1,y1, x2, y2))
+                            Ok(Line2D::new(x1, y1, x2, y2))
                         } else {
-                            Ok(Line2D::new(x2,y2, x1, y1))
+                            Ok(Line2D::new(x2, y2, x1, y1))
                         }
                     } else {
                         Err(io::Error::new(

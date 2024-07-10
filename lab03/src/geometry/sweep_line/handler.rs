@@ -182,7 +182,6 @@ impl Handler {
                 let queue_contains = self.queue.contains(&new_event);
 
                 if self.intersections.contains(&intersection) || queue_contains {
-                    println!("Intersection at {} already in Queue", point);
                     return;
                 }
 

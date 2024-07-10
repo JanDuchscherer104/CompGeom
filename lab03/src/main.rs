@@ -1,7 +1,7 @@
-use utils::get_dat_paths;
+use crate::geometry::sweep_line::handler::SweepLineOptions;
 use geometry::line_segments::LineSegments2D;
 use geometry::sweep_line::handler::Handler;
-use crate::geometry::sweep_line::handler::SweepLineOptions;
+use utils::get_dat_paths;
 
 mod geometry;
 mod utils;

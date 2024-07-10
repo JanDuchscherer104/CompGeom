@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-mod events;
 mod event_queue;
-mod sweep_line;
+mod events;
 pub mod handler;
+mod sweep_line;

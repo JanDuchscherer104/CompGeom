@@ -1,6 +1,6 @@
+use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
-use ordered_float::OrderedFloat;
 
 const EPSILON: f64 = 1e-9;
 
@@ -12,7 +12,10 @@ pub struct Point2D {
 
 impl Point2D {
     pub fn new(x: f64, y: f64) -> Self {
-        Self { x: OrderedFloat(x), y: OrderedFloat(y) }
+        Self {
+            x: OrderedFloat(x),
+            y: OrderedFloat(y),
+        }
     }
 
     fn nearly_equals(&self, other: &Point2D) -> bool {
@@ -31,13 +34,13 @@ impl Ord for Point2D {
         if self.nearly_equals(other) {
             Ordering::Equal
         } else {
-            self.x.partial_cmp(&other.x)
+            self.x
+                .partial_cmp(&other.x)
                 .unwrap_or(Ordering::Equal)
                 .then_with(|| self.y.partial_cmp(&other.y).unwrap_or(Ordering::Equal))
         }
     }
 }
-
 
 impl PartialEq for Point2D {
     fn eq(&self, other: &Self) -> bool {
@@ -57,11 +60,26 @@ mod tests {
 
     #[test]
     fn test_point_cmp() {
-        let p1 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(2.0) };
-        let p2 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(2.0) };
-        let p3 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(3.0) };
-        let p4 = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) };
-        let p5 = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(3.0) };
+        let p1 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(2.0),
+        };
+        let p2 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(2.0),
+        };
+        let p3 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(3.0),
+        };
+        let p4 = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(2.0),
+        };
+        let p5 = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(3.0),
+        };
 
         assert_eq!(p1, p2);
         assert!(p1 < p3);
@@ -74,11 +92,26 @@ mod tests {
 
     #[test]
     fn test_point_order_should_order_by_x_then_y() {
-        let p1 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(2.0) };
-        let p2 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(2.0) };
-        let p3 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(3.0) };
-        let p4 = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) };
-        let p5 = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(3.0) };
+        let p1 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(2.0),
+        };
+        let p2 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(2.0),
+        };
+        let p3 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(3.0),
+        };
+        let p4 = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(2.0),
+        };
+        let p5 = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(3.0),
+        };
 
         let mut points = vec![p5, p1, p4, p3, p2];
         points.sort();

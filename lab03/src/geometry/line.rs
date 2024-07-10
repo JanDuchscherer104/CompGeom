@@ -1,8 +1,8 @@
-use std::cmp::{Ordering, PartialEq};
-use std::fmt::Display;
-use ordered_float::OrderedFloat;
 use crate::geometry::intersection::Intersection;
 use crate::geometry::point::Point2D;
+use ordered_float::OrderedFloat;
+use std::cmp::{Ordering, PartialEq};
+use std::fmt::Display;
 
 #[derive(Copy, Clone, Debug, Hash)]
 pub struct Line2D {
@@ -13,8 +13,14 @@ pub struct Line2D {
 impl Line2D {
     pub fn new(x1: f64, y1: f64, x2: f64, y2: f64) -> Self {
         Line2D {
-            start: Point2D { x: OrderedFloat::from(x1), y: OrderedFloat::from(y1) },
-            end: Point2D { x: OrderedFloat::from(x2), y: OrderedFloat::from(y2) },
+            start: Point2D {
+                x: OrderedFloat::from(x1),
+                y: OrderedFloat::from(y1),
+            },
+            end: Point2D {
+                x: OrderedFloat::from(x2),
+                y: OrderedFloat::from(y2),
+            },
         }
     }
 
@@ -25,7 +31,7 @@ impl Line2D {
     }
 
     pub fn is_zero_length(&self) -> bool {
-        self.start  == self.end
+        self.start == self.end
     }
 
     pub fn is_vertical(&self) -> bool {
@@ -42,7 +48,8 @@ impl Line2D {
         }
 
         // Check if the point lies on the line defined by the segment
-        let is_on_line = dx == OrderedFloat(0.0) || (point.x - self.start.x) * dy == (point.y - self.start.y) * dx;
+        let is_on_line = dx == OrderedFloat(0.0)
+            || (point.x - self.start.x) * dy == (point.y - self.start.y) * dx;
 
         if !is_on_line {
             return false;
@@ -50,21 +57,21 @@ impl Line2D {
 
         // Check if the point is within the segment bounds
         let within_x_bounds = if dx.abs() > f64::EPSILON {
-            (self.start.x <= point.x && point.x <= self.end.x) || (self.end.x <= point.x && point.x <= self.start.x)
+            (self.start.x <= point.x && point.x <= self.end.x)
+                || (self.end.x <= point.x && point.x <= self.start.x)
         } else {
             true
         };
 
         let within_y_bounds = if dy.abs() > f64::EPSILON {
-            (self.start.y <= point.y && point.y <= self.end.y) || (self.end.y <= point.y && point.y <= self.start.y)
+            (self.start.y <= point.y && point.y <= self.end.y)
+                || (self.end.y <= point.y && point.y <= self.start.y)
         } else {
             true
         };
 
         within_x_bounds && within_y_bounds
     }
-
-
 
     /// Finds the intersection point between two line segments.
     /// If overlapping, it will return one of the overlapping endpoints.
@@ -80,25 +87,56 @@ impl Line2D {
         if denominator.abs() < f64::EPSILON {
             // Check if lines are identical
             if *self == other {
-                return Some(Intersection::IdenticalOverlap { line1: *self, line2: other, overlap: *self })
+                return Some(Intersection::IdenticalOverlap {
+                    line1: *self,
+                    line2: other,
+                    overlap: *self,
+                });
             }
 
             // Check if one line is completely inside the other one
             if self.contains(other.start) && self.contains(other.end) {
-                return Some(Intersection::ContainedOverlap { line1: *self, line2: other, overlap: other });
+                return Some(Intersection::ContainedOverlap {
+                    line1: *self,
+                    line2: other,
+                    overlap: other,
+                });
             }
             if other.contains(self.start) && other.contains(self.end) {
-                return Some(Intersection::ContainedOverlap { line1: *self, line2: other, overlap: *self });
+                return Some(Intersection::ContainedOverlap {
+                    line1: *self,
+                    line2: other,
+                    overlap: *self,
+                });
             }
 
             // Check for partial overlap
-            if self.contains(other.start) || self.contains(other.end) || other.contains(self.start) || other.contains(self.end) {
-                let overlap_start = if self.contains(other.start) { other.start } else { self.start };
-                let overlap_end = if self.contains(other.end) { other.end } else { self.end };
-                let overlap = Line2D { start: overlap_start, end: overlap_end };
-                return Some(Intersection::PartialOverlap { line1: *self, line2: other, overlap });
+            if self.contains(other.start)
+                || self.contains(other.end)
+                || other.contains(self.start)
+                || other.contains(self.end)
+            {
+                let overlap_start = if self.contains(other.start) {
+                    other.start
+                } else {
+                    self.start
+                };
+                let overlap_end = if self.contains(other.end) {
+                    other.end
+                } else {
+                    self.end
+                };
+                let overlap = Line2D {
+                    start: overlap_start,
+                    end: overlap_end,
+                };
+                return Some(Intersection::PartialOverlap {
+                    line1: *self,
+                    line2: other,
+                    overlap,
+                });
             }
-            return None
+            return None;
         }
 
         let ua_numerator = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
@@ -110,24 +148,36 @@ impl Line2D {
         let tolerance = f64::EPSILON;
 
         // Check if the intersection point is within both line segments or at their endpoints
-        if (ua >= -tolerance && ua <= 1.0 + tolerance) && (ub >= -tolerance && ub <= 1.0 + tolerance) {
+        if (ua >= -tolerance && ua <= 1.0 + tolerance)
+            && (ub >= -tolerance && ub <= 1.0 + tolerance)
+        {
             let intersection_x = x1 + ua * (x2 - x1);
             let intersection_y = y1 + ua * (y2 - y1);
-            let point = Point2D { x: OrderedFloat(intersection_x), y: OrderedFloat(intersection_y) };
+            let point = Point2D {
+                x: OrderedFloat(intersection_x),
+                y: OrderedFloat(intersection_y),
+            };
 
-            let is_touching = (ua.abs() < tolerance || (ua - 1.0).abs() < tolerance) ||
-                (ub.abs() < tolerance || (ub - 1.0).abs() < tolerance);
+            let is_touching = (ua.abs() < tolerance || (ua - 1.0).abs() < tolerance)
+                || (ub.abs() < tolerance || (ub - 1.0).abs() < tolerance);
 
             if is_touching {
-                Some(Intersection::Touching { line1: *self, line2: other, point })
+                Some(Intersection::Touching {
+                    line1: *self,
+                    line2: other,
+                    point,
+                })
             } else {
-                Some(Intersection::Crossing { line1: *self, line2: other, point })
+                Some(Intersection::Crossing {
+                    line1: *self,
+                    line2: other,
+                    point,
+                })
             }
         } else {
             None
         }
     }
-
 
     pub fn intersects(&self, other: Line2D) -> bool {
         // if self.is_zero_length() && other.is_zero_length() {
@@ -198,7 +248,8 @@ impl Line2D {
         let lambda1 = to_param(&other.start);
         let lambda2 = to_param(&other.end);
 
-        lambda1.min(lambda2) <= OrderedFloat::from(1.0) && lambda1.max(lambda2) >= OrderedFloat::from(0.0)
+        lambda1.min(lambda2) <= OrderedFloat::from(1.0)
+            && lambda1.max(lambda2) >= OrderedFloat::from(0.0)
     }
 
     fn bbox_overlap(&self, other: &Line2D) -> bool {
@@ -244,7 +295,9 @@ impl PartialOrd for Line2D {
 
 impl Ord for Line2D {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.start.y.cmp(&other.start.y)
+        self.start
+            .y
+            .cmp(&other.start.y)
             .then_with(|| self.start.x.cmp(&other.start.x))
             .then_with(|| self.end.y.cmp(&other.end.y))
             .then_with(|| self.end.x.cmp(&other.end.x))
@@ -253,17 +306,24 @@ impl Ord for Line2D {
 
 impl Display for Line2D {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("({}, {}) -> ({}, {})", self.start.x.0, self.start.y.0, self.end.x.0, self.end.y.0))
+        write!(
+            f,
+            "{}",
+            format!(
+                "({}, {}) -> ({}, {})",
+                self.start.x.0, self.start.y.0, self.end.x.0, self.end.y.0
+            )
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::geometry::intersection::Intersection;
+    use crate::geometry::point::Point2D;
     use geo::line_string;
     use geo::{Intersects, LineString};
     use ordered_float::OrderedFloat;
-    use crate::geometry::intersection::Intersection;
-    use crate::geometry::point::Point2D;
 
     use super::Line2D;
 
@@ -281,63 +341,90 @@ mod tests {
     #[test]
     fn test_contains_point_on_horizontal_line() {
         let line = Line2D::new(0.0, 0.0, 5.0, 0.0);
-        let point = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(0.0) };
+        let point = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(0.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_on_vertical_line() {
         let line = Line2D::new(0.0, 0.0, 0.0, 5.0);
-        let point = Point2D { x: OrderedFloat(0.0), y: OrderedFloat(2.0) };
+        let point = Point2D {
+            x: OrderedFloat(0.0),
+            y: OrderedFloat(2.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_on_diagonal_line() {
         let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
-        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(3.0) };
+        let point = Point2D {
+            x: OrderedFloat(3.0),
+            y: OrderedFloat(3.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_outside_segment_bounds() {
         let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
-        let point = Point2D { x: OrderedFloat(6.0), y: OrderedFloat(6.0) };
+        let point = Point2D {
+            x: OrderedFloat(6.0),
+            y: OrderedFloat(6.0),
+        };
         assert!(!line.contains(point));
     }
 
     #[test]
     fn test_contains_point_not_on_line() {
         let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
-        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(4.0) };
+        let point = Point2D {
+            x: OrderedFloat(3.0),
+            y: OrderedFloat(4.0),
+        };
         assert!(!line.contains(point));
     }
 
     #[test]
     fn test_contains_point_on_endpoint_start() {
         let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
-        let point = Point2D { x: OrderedFloat(0.0), y: OrderedFloat(0.0) };
+        let point = Point2D {
+            x: OrderedFloat(0.0),
+            y: OrderedFloat(0.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_on_endpoint_end() {
         let line = Line2D::new(0.0, 0.0, 5.0, 5.0);
-        let point = Point2D { x: OrderedFloat(5.0), y: OrderedFloat(5.0) };
+        let point = Point2D {
+            x: OrderedFloat(5.0),
+            y: OrderedFloat(5.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_on_zero_length_line() {
         let line = Line2D::new(2.0, 2.0, 2.0, 2.0);
-        let point = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) };
+        let point = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(2.0),
+        };
         assert!(line.contains(point));
     }
 
     #[test]
     fn test_contains_point_off_zero_length_line() {
         let line = Line2D::new(2.0, 2.0, 2.0, 2.0);
-        let point = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(2.0) };
+        let point = Point2D {
+            x: OrderedFloat(3.0),
+            y: OrderedFloat(2.0),
+        };
         assert!(!line.contains(point));
     }
 
@@ -574,7 +661,6 @@ mod tests {
         // Test ordering with same y, different x
         assert!(line4 < line5);
 
-
         // Test sorting
         let mut lines = vec![line4, line1, line3, line2, line5];
         lines.sort();
@@ -590,8 +676,8 @@ mod tests {
 
         match intersection {
             Intersection::Crossing { point, .. } => {
-                assert_eq!(point, Point2D::new(2.0,2.0))
-            },
+                assert_eq!(point, Point2D::new(2.0, 2.0))
+            }
             _ => panic!("Expected Crossing intersection, but got {:?}", intersection),
         }
     }
@@ -605,8 +691,8 @@ mod tests {
 
         match intersection {
             Intersection::Touching { point, .. } => {
-                assert_eq!(point, Point2D::new(3.0,1.0))
-            },
+                assert_eq!(point, Point2D::new(3.0, 1.0))
+            }
             _ => panic!("Expected Touching intersection, but got {:?}", intersection),
         }
     }
@@ -620,8 +706,8 @@ mod tests {
 
         match intersection {
             Intersection::Touching { point, .. } => {
-                assert_eq!(point, Point2D::new(2.0,1.0))
-            },
+                assert_eq!(point, Point2D::new(2.0, 1.0))
+            }
             _ => panic!("Expected Touching intersection, but got {:?}", intersection),
         }
     }
@@ -634,7 +720,13 @@ mod tests {
         let intersection = line1.find_intersection(line2).unwrap();
 
         match intersection {
-            Intersection::Touching { point, .. } => assert_eq!(point, Point2D { x: OrderedFloat(2.0), y: OrderedFloat(2.0) }),
+            Intersection::Touching { point, .. } => assert_eq!(
+                point,
+                Point2D {
+                    x: OrderedFloat(2.0),
+                    y: OrderedFloat(2.0)
+                }
+            ),
             _ => panic!("Expected Touching intersection, but got {:?}", intersection),
         }
     }
@@ -648,8 +740,11 @@ mod tests {
         match intersection {
             Intersection::IdenticalOverlap { overlap, .. } => {
                 assert_eq!(overlap, line1)
-            },
-            _ => panic!("Expected IdenticalOverlap intersection, but got {:?}", intersection),
+            }
+            _ => panic!(
+                "Expected IdenticalOverlap intersection, but got {:?}",
+                intersection
+            ),
         }
     }
 
@@ -663,8 +758,11 @@ mod tests {
         match intersection {
             Intersection::ContainedOverlap { overlap, .. } => {
                 assert_eq!(overlap, line2)
-            },
-            _ => panic!("Expected ContainedOverlap intersection, but got {:?}", intersection),
+            }
+            _ => panic!(
+                "Expected ContainedOverlap intersection, but got {:?}",
+                intersection
+            ),
         }
     }
 
@@ -679,8 +777,11 @@ mod tests {
             Intersection::PartialOverlap { overlap, .. } => {
                 let expected_overlap = Line2D::new(1.0, 1.0, 2.0, 2.0);
                 assert_eq!(overlap, expected_overlap)
-            },
-            _ => panic!("Expected PartialOverlap intersection, but got {:?}", intersection),
+            }
+            _ => panic!(
+                "Expected PartialOverlap intersection, but got {:?}",
+                intersection
+            ),
         }
     }
 
@@ -695,8 +796,11 @@ mod tests {
             Intersection::PartialOverlap { overlap, .. } => {
                 let expected_overlap = Line2D::new(3.0, 3.0, 3.0, 3.0);
                 assert_eq!(overlap, expected_overlap)
-            },
-            _ => panic!("Expected PartialOverlap intersection, but got {:?}", intersection),
+            }
+            _ => panic!(
+                "Expected PartialOverlap intersection, but got {:?}",
+                intersection
+            ),
         }
     }
 

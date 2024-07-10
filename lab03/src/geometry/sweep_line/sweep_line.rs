@@ -1,9 +1,8 @@
+use crate::geometry::line::Line2D;
+use ordered_float::OrderedFloat;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
-use ordered_float::OrderedFloat;
-use crate::geometry::line::Line2D;
-
 
 #[derive(Debug, Clone)]
 struct OrderedLine {
@@ -13,10 +12,7 @@ struct OrderedLine {
 
 impl OrderedLine {
     pub fn new(value: Line2D, x: Rc<RefCell<f64>>) -> Self {
-        OrderedLine {
-            value,
-            x,
-        }
+        OrderedLine { value, x }
     }
 }
 
@@ -39,17 +35,24 @@ impl Ord for OrderedLine {
         let y_self = self.value.y_at(self.x.borrow().clone());
         let y_other = other.value.y_at(other.x.borrow().clone());
 
-        if y_self.is_none(){
-            panic!("Cant calculate y value for the line {} at x = {}", self.value, self.x.borrow());
-       }
-        if y_other.is_none(){
-            panic!("Cant calculate y value for the line {} at x = {}", other.value, self.x.borrow());
+        if y_self.is_none() {
+            panic!(
+                "Cant calculate y value for the line {} at x = {}",
+                self.value,
+                self.x.borrow()
+            );
+        }
+        if y_other.is_none() {
+            panic!(
+                "Cant calculate y value for the line {} at x = {}",
+                other.value,
+                self.x.borrow()
+            );
         }
 
         OrderedFloat::from(y_self.unwrap()).cmp(&OrderedFloat::from(y_other.unwrap()))
     }
 }
-
 
 #[derive(Debug)]
 pub struct Neighbors {
@@ -69,7 +72,7 @@ impl SweepLine {
     pub fn new() -> Self {
         SweepLine {
             lines: Vec::new(),
-            x: Rc::new(RefCell::new(f64::NEG_INFINITY))
+            x: Rc::new(RefCell::new(f64::NEG_INFINITY)),
         }
     }
 
@@ -86,7 +89,11 @@ impl SweepLine {
     pub fn remove(&mut self, line: &Line2D) -> bool {
         if let Some(ordered_line) = self.find_ordered_line(line).cloned() {
             // get index of ordered line
-            let index = self.lines.iter().position(|ol| ol == &ordered_line).unwrap();
+            let index = self
+                .lines
+                .iter()
+                .position(|ol| ol == &ordered_line)
+                .unwrap();
             self.lines.remove(index);
             self.lines.sort();
             true
@@ -127,10 +134,15 @@ impl SweepLine {
     pub fn print_lines(&self) {
         println!("Line Order @ {}", self.x.borrow());
         for ol in &self.lines {
-            println!("\t{} @ {} = {}", ol.value, self.x.borrow(), ol.value.y_at(self.x.borrow().clone()).unwrap());
+            println!(
+                "\t{} @ {} = {}",
+                ol.value,
+                self.x.borrow(),
+                ol.value.y_at(self.x.borrow().clone()).unwrap()
+            );
         }
     }
-    
+
     pub fn get_sorted_lines(&self) -> Vec<Line2D> {
         self.lines.iter().cloned().map(|line| line.value).collect()
     }
@@ -138,7 +150,6 @@ impl SweepLine {
     fn find_ordered_line(&self, line: &Line2D) -> Option<&OrderedLine> {
         self.lines.iter().find(|ol| ol.value == *line)
     }
-
 }
 
 #[cfg(test)]

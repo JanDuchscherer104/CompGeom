@@ -1,6 +1,6 @@
-use std::collections::BTreeSet;
 use crate::geometry::line::Line2D;
 use crate::geometry::sweep_line::events::Event;
+use std::collections::BTreeSet;
 
 pub struct EventQueue {
     events: BTreeSet<Event>,
@@ -47,17 +47,35 @@ impl EventQueue {
 
 #[cfg(test)]
 mod tests {
-    use ordered_float::OrderedFloat;
     use super::*;
     use crate::geometry::point::Point2D;
+    use ordered_float::OrderedFloat;
 
     fn create_test_lines() -> Vec<Line2D> {
-        let p1 = Point2D { x: OrderedFloat(1.0), y: OrderedFloat(1.0) };
-        let p2 = Point2D { x: OrderedFloat(2.5), y: OrderedFloat(2.0) };
-        let p3 = Point2D { x: OrderedFloat(1.5), y: OrderedFloat(2.0) };
-        let p4 = Point2D { x: OrderedFloat(2.0), y: OrderedFloat(1.0) };
-        let p5 = Point2D { x: OrderedFloat(2.5), y: OrderedFloat(1.5) };
-        let p6 = Point2D { x: OrderedFloat(3.0), y: OrderedFloat(1.5) };
+        let p1 = Point2D {
+            x: OrderedFloat(1.0),
+            y: OrderedFloat(1.0),
+        };
+        let p2 = Point2D {
+            x: OrderedFloat(2.5),
+            y: OrderedFloat(2.0),
+        };
+        let p3 = Point2D {
+            x: OrderedFloat(1.5),
+            y: OrderedFloat(2.0),
+        };
+        let p4 = Point2D {
+            x: OrderedFloat(2.0),
+            y: OrderedFloat(1.0),
+        };
+        let p5 = Point2D {
+            x: OrderedFloat(2.5),
+            y: OrderedFloat(1.5),
+        };
+        let p6 = Point2D {
+            x: OrderedFloat(3.0),
+            y: OrderedFloat(1.5),
+        };
 
         vec![
             Line2D { start: p1, end: p2 },
@@ -71,7 +89,7 @@ mod tests {
         let lines = create_test_lines();
         let event_queue = EventQueue::new(lines);
 
-        assert_eq!(event_queue.events.len(), 6);  // Each line has a start and end event
+        assert_eq!(event_queue.events.len(), 6); // Each line has a start and end event
 
         // Check if the events are sorted correctly
         let mut last_event: Option<&Event> = None;
@@ -90,8 +108,14 @@ mod tests {
 
         let new_event = Event::StartEvent {
             line: Line2D {
-                start: Point2D { x: OrderedFloat(0.0), y: OrderedFloat(0.0) },
-                end: Point2D { x: OrderedFloat(0.5), y: OrderedFloat(0.5) },
+                start: Point2D {
+                    x: OrderedFloat(0.0),
+                    y: OrderedFloat(0.0),
+                },
+                end: Point2D {
+                    x: OrderedFloat(0.5),
+                    y: OrderedFloat(0.5),
+                },
             },
         };
         event_queue.add(new_event);
@@ -135,7 +159,7 @@ mod tests {
         let event_to_check = event_queue.events.iter().next().cloned().unwrap();
         assert!(event_queue.contains(&event_to_check));
 
-        event_queue.pop();  // Remove the event
+        event_queue.pop(); // Remove the event
         assert!(!event_queue.contains(&event_to_check));
     }
 
