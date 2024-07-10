@@ -30,7 +30,7 @@ impl SweepLineOptions {
             panic_on_zero_length: true,
             panic_on_overlap: true,
             panic_on_touch: true,
-            x_shift: 0.000001,
+            x_shift: 1e-9,
         }
     }
 
@@ -43,7 +43,7 @@ impl SweepLineOptions {
             panic_on_zero_length: false,
             panic_on_overlap: true,
             panic_on_touch: true,
-            x_shift: 0.000001,
+            x_shift: 1e-9,
         }
     }
 }
@@ -384,6 +384,24 @@ mod tests {
         let intersections = handler.run();
 
         assert_eq!(intersections.len(), 3);
+    }
+
+    #[test]
+    fn test_multiple_intersections_similar_x() {
+        // Visualization: https://www.geogebra.org/calculator/fpugz3xk
+
+        let line1 = Line2D::new(20.818, 80.24, 20.6131, 79.6825);
+        let line2 = Line2D::new(20.823, 47.127, 20.8124, 47.3939);
+        let line3 = Line2D::new(20.616, 47.165, 21.2751, 47.4518);
+
+        let mut handler = Handler::new(
+            vec![line1, line2, line3],
+            get_options_to_panic(),
+        );
+
+        let intersections = handler.run();
+
+        assert_eq!(intersections.len(), 1);
     }
 
     #[test]
