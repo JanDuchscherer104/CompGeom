@@ -18,6 +18,7 @@ The program can be run with `cargo run <args>`, where `<args>` are the following
     - `<filename>` will run the benchmark Sweep Line on the file with the given name
     - `--brute-force` will run the benchmark with the brute force algorithm
     - `--sweep-line` will run the benchmark with the sweep line algorithm
+    - `--external` will run the benchmark with an external implementation of the [geo library](https://docs.rs/geo/latest/geo/)
 - `analyze <filename>`
    - uses the brute force algorithm to output additional information about illegal line segments and intersection types
 

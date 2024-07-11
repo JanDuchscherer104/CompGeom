@@ -2,7 +2,7 @@ use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
-const EPSILON: f64 = 1e-9;
+const EPSILON: f64 = 1e-12;
 
 #[derive(Copy, Clone, Debug, Eq, Hash)]
 pub struct Point2D {

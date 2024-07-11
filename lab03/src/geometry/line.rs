@@ -192,13 +192,8 @@ impl Line2D {
 
         if ccw1 == 0.0 && ccw2 == 0.0 {
             // They are colinear -> check whether they overlap
-            // quickly check if bounding boxes overlap, then check parametric overlap
-            if self.bbox_overlap(&other) {
-                // script says parametric_overlap, but shouldn't bbox overlap be enough?
-                self.parametric_overlap(&other)
-            } else {
-                false
-            }
+            // script says parametric_overlap, but shouldn't bbox overlap be enough?
+            self.bbox_overlap(&other)
         } else {
             // If line segments straddle each other, they intersect
             ccw1 * ccw2 <= OrderedFloat::from(0.0) && ccw3 * ccw4 <= OrderedFloat::from(0.0)

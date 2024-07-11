@@ -3,6 +3,8 @@ use crate::geometry::sweep_line::handler::SweepLineOptions;
 use cpu_time::ProcessTime;
 use geometry::line_segments::LineSegments2D;
 use geometry::sweep_line::handler::Handler;
+use geometry::external::handler::GeoHandler;
+
 use std::{env, panic};
 use std::fmt::Display;
 use std::path::Path;
@@ -32,6 +34,7 @@ fn main() {
                 Some(algorithm) => match algorithm.as_str() {
                     "--brute-force" => Algorithm::BruteForce,
                     "--sweep-line" => Algorithm::SweepLine,
+                    "--external" => Algorithm::External,
                     _ => {
                         eprintln!("Unknown parameter: {}", algorithm);
                         return;
@@ -85,6 +88,7 @@ fn analyze(file: &str) {
 enum Algorithm {
     BruteForce,
     SweepLine,
+    External,
 }
 
 impl Display for Algorithm {
@@ -92,6 +96,7 @@ impl Display for Algorithm {
         match self {
             Algorithm::BruteForce => write!(f, "Brute Force"),
             Algorithm::SweepLine => write!(f, "Sweep Line"),
+            Algorithm::External => write!(f, "External (Geo Library)"),
         }
     }
 }
@@ -134,6 +139,10 @@ fn benchmark(file: &str, algorithm: Algorithm) -> BenchmarkResult {
             Algorithm::SweepLine => {
                 let mut sweep_line_handler = Handler::new(lines.clone().lines, SweepLineOptions::panic_disabled());
                 sweep_line_handler.run()
+            },
+            Algorithm::External => {
+                let geo_handler = GeoHandler::new(lines.clone().lines);
+                geo_handler.run()
             }
         }
     });
