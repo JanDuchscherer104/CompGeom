@@ -40,7 +40,7 @@ where `<file>` is the path to the file containing the line segments (e.g. `data/
 - The file `s_1000_1.dat` actually contains 11 intersections, however 4 of them are overlapping lines and 3 of them are touching lines. As such, the implementation works as expected.
 - The file `s_1000_10.dat` contains 796 intersections, which is the expected result.
 - The file `s_10000_1.dat` contains 733 intersections. There are again 4 overlapping and 3 touching lines. The remaining difference might be due to vertical, zero-length lines. Furthermore, end and intersection events with the same x-coordinate are filtered out.
-- The file `s_100000_1.dat` actually contains 77135 intersections. There are again 4 overlapping and 3 touching lines. The remaining difference might be due to vertical, zero-length lines. Furthermore, end and intersection events with the same x-coordinate are filtered out.
+- The file `s_100000_1.dat` actually contains 77135 intersections. There are again 4 overlapping and 3 touching lines. The remaining difference might be due to vertical, zero-length lines. Furthermore, 15636 end and intersection events with the same x-coordinate are filtered out.
 
 ### Implementation details
 - The implementation is based on the Bentley Ottmann Algorithm
