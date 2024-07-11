@@ -7,3 +7,4 @@ edition = "2021"
 ordered-float = { version = "4.0", default-features = false }
 geo = "0.28.0"
 cpu-time = "1.0.0"
+memory-stats = "1.2.0"

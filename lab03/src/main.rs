@@ -4,6 +4,7 @@ use cpu_time::ProcessTime;
 use geometry::line_segments::LineSegments2D;
 use geometry::sweep_line::handler::Handler;
 use geometry::external::handler::GeoHandler;
+use memory_stats::memory_stats;
 
 use std::{env, panic};
 use std::fmt::Display;
@@ -106,6 +107,7 @@ struct BenchmarkResult {
     lines: usize,
     intersections: Option<usize>,
     time: Option<Duration>,
+    memory: Option<u64>,
 }
 
 fn benchmark_single(file: &str, algorithm: Algorithm) {
@@ -124,11 +126,11 @@ fn benchmark_all(algorithm: Algorithm) {
 }
 
 fn benchmark(file: &str, algorithm: Algorithm) -> BenchmarkResult {
-
     println!("Starting benchmark for file {} with {} Algorithm...", file, algorithm.to_string());
     let lines = get_lines(file).expect(format!("Error reading file {}", file).as_str());
 
     let start = ProcessTime::try_now().expect("Getting process time failed");
+    let memory_start = get_memory_usage();
 
     let result = panic::catch_unwind(|| {
         match algorithm {
@@ -153,6 +155,7 @@ fn benchmark(file: &str, algorithm: Algorithm) -> BenchmarkResult {
             lines: lines.lines.len(),
             intersections: Some(intersections.len()),
             time: Some(start.elapsed()),
+            memory: Some(get_memory_usage() - memory_start),
         },
         Err(_) => {
             BenchmarkResult {
@@ -160,6 +163,7 @@ fn benchmark(file: &str, algorithm: Algorithm) -> BenchmarkResult {
                 lines: lines.lines.len(),
                 intersections: None,
                 time: None,
+                memory: None,
             }
         }
     }
@@ -169,13 +173,14 @@ fn print_benchmark_results(results: Vec<BenchmarkResult>) {
     println!();
     // Header
     println!(
-        "| {0: <20} | {1: <10} | {2: <15} | {3: <15} |",
-        "File", "# Lines", "# Intersections", "CPU Time (ms)"
+        "| {0: <20} | {1: <10} | {2: <15} | {3: <15} | {4: <15} |",
+        "File", "# Lines", "# Intersections", "CPU Time (ms)", "Memory (kB)"
     );
     println!(
-        "| {} | {} | {} | {} |",
+        "| {} | {} | {} | {} | {} |",
         "-".repeat(20),
         "-".repeat(10),
+        "-".repeat(15),
         "-".repeat(15),
         "-".repeat(15)
     );
@@ -191,12 +196,18 @@ fn print_benchmark_results(results: Vec<BenchmarkResult>) {
             None => "Error".to_string(),
         };
 
+        let memory = match result.memory {
+            Some(m) => (m/1024).to_string(), // Convert to kB
+            None => "Error".to_string(),
+        };
+
         println!(
-            "| {0: <20} | {1: <10} | {2: <15} | {3: <15} |",
+            "| {0: <20} | {1: <10} | {2: <15} | {3: <15} | {4: <15} |",
             result.file,
             result.lines,
             intersections,
-            time
+            time,
+            memory
         );
     }
 
@@ -211,4 +222,13 @@ fn get_lines(file: &str) -> Option<LineSegments2D> {
         return None;
     }
     Some(lines.unwrap())
+}
+
+fn get_memory_usage() -> u64 {
+    if let Some(usage) = memory_stats() {
+        usage.physical_mem as u64
+    } else {
+        eprintln!("Couldn't get memory usage.");
+        0
+    }
 }
