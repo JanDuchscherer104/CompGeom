@@ -24,20 +24,21 @@ In dem Tar-File 'strecken.tgz' (s.u.) befinden sich Dateien mit jeweils 4 Koordi
 ### Results
 
 #### Custom implementation (Brute-force)
-| File                 | # Lines    | # Intersections | CPU Time (ms)   |
-| -------------------- | ---------- | --------------- | --------------- |
-| data/s_1000_1.dat    | 1001       | 11              | 61              |
-| data/s_1000_10.dat   | 994        | 796             | 60              |
-| data/s_10000_1.dat   | 10001      | 733             | 6109            |
-| data/s_100000_1.dat  | 100001     | 77135           | 626999          |
+| File                 | # Lines    | # Intersections | CPU Time (ms)   | Memory (kB)     |
+| -------------------- | ---------- | --------------- | --------------- | --------------- |
+| data/s_1000_1.dat    | 1001       | 11              | 60              | 92              |
+| data/s_1000_10.dat   | 994        | 796             | 61              | 288             |
+| data/s_10000_1.dat   | 10001      | 733             | 6053            | 176             |
+| data/s_100000_1.dat  | 100001     | 77135           | 602864          | 16276           |
+
 
 #### External implementation (Brute-force with Geo library)
-| File                 | # Lines    | # Intersections | CPU Time (ms)   |
-| -------------------- | ---------- | --------------- | --------------- |
-| data/s_1000_1.dat    | 1001       | 11              | 35              |
-| data/s_1000_10.dat   | 994        | 796             | 35              |
-| data/s_10000_1.dat   | 10001      | 733             | 3342            |
-| data/s_100000_1.dat  | 100001     | 77135           | 314191          |
+| File                 | # Lines    | # Intersections | CPU Time (ms)   | Memory (kB)     |
+| -------------------- | ---------- | --------------- | --------------- | --------------- |
+| data/s_1000_1.dat    | 1001       | 11              | 30              | 112             |
+| data/s_1000_10.dat   | 994        | 796             | 31              | 184             |
+| data/s_10000_1.dat   | 10001      | 733             | 3050            | 72              |
+| data/s_100000_1.dat  | 100001     | 77135           | 313160          | 16276           |
 
 ### Justification
 #### Algorithm
@@ -54,12 +55,13 @@ In dem Tar-File 'strecken.tgz' (s.u.) befinden sich Dateien mit jeweils 4 Koordi
 Implementieren Sie unter Zuhilfenahme der Funktionalität aus Aufgabe 1 zur Berechnung von Schnittpunkten zwischen Linien einen Sweep Line Algorithmus und vergleichen Sie die erzielten Laufzeiten. Verwenden Sie für die Laufzeitvergleiche neben den Daten aus der ersten Aufgabe die Daten aus s_1000_10.dat. Vergleichen Sie ebenso die Laufzeiten für die Files s_1000_1.dat und s_1000_10.dat (s.u.) .
 
 ### Results
-| File                 | # Lines    | # Intersections | CPU Time (ms)   |
-| -------------------- | ---------- | --------------- | --------------- |
-| data/s_1000_1.dat    | 1001       | 4               | 5               |
-| data/s_1000_10.dat   | 994        | 796             | 28              |
-| data/s_10000_1.dat   | 10001      | 709             | 193             |
-| data/s_100000_1.dat  | 100001     | 63344           | 15660           |
+| File                 | # Lines    | # Intersections | CPU Time (ms)   | Memory (kB)     |
+| -------------------- | ---------- | --------------- | --------------- | --------------- |
+| data/s_1000_1.dat    | 1001       | 4               | 5               | 132             |
+| data/s_1000_10.dat   | 994        | 796             | 27              | 600             |
+| data/s_10000_1.dat   | 10001      | 709             | 191             | 104             |
+| data/s_100000_1.dat  | 100001     | 63344           | 15058           | 13052           |
+
 
 #### Interpretation of results
 ##### Validity
